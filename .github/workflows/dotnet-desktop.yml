@@ -1,0 +1,61 @@
+name: Build & Release Windows EXE
+permissions:
+  contents: write
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      release_name:
+        description: 'Optional release name'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      RELEASE: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore RpgProject.sln
+
+      - name: Build project
+        run: dotnet build ./RpgProject/RpgProject.csproj -c Release -maxcpucount:1
+
+      - name: Publish self-contained Windows EXE
+        if: env.RELEASE == 'true'
+        run: |
+          dotnet publish ./RpgProject/RpgProject.csproj -c Release -r win-x64 --self-contained true -o publish
+          Compress-Archive -Path publish\* -DestinationPath game-${{ github.event.inputs.tag_name || github.ref_name }}.zip
+
+      - name: Create or update GitHub Release
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: Release ${{ github.event.inputs.tag_name || github.ref_name }}
+          body: |
+            Built automatically by GitHub Actions.
+          files: game-${{ github.event.inputs.tag_name || github.ref_name }}.zip
+          prerelease: ${{ contains(github.event.inputs.tag_name || github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

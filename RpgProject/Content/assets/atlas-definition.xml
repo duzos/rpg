@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas>
+	<Texture>assets/atlas</Texture>
+	<Regions>
+		<Region name="char-forward-idle" x="0" y="0" width="19" height="37"></Region>
+		<Region name="char-forward-walk-1" x="19" y="0" width="19" height="37"></Region>
+		<Region name="char-forward-walk-2" x="38" y="0" width="19" height="37"></Region>
+		<Region name="char-side-idle" x="57" y="0" width="19" height="37"></Region>
+		<Region name="char-side-walk-1" x="76" y="0" width="19" height="37"></Region>
+		<Region name="char-side-walk-2" x="95" y="0" width="19" height="37"></Region>
+		<Region name="char-back-idle" x="114" y="0" width="19" height="37"></Region>
+		<Region name="char-back-walk-1" x="133" y="0" width="19" height="37"></Region>
+		<Region name="char-back-walk-2" x="152" y="0" width="19" height="37"></Region>
+		<Region name="grass" x="0" y="37" width="20" height="20"></Region>
+		<Region name="black" x="20" y="37" width="20" height="20"></Region>
+	</Regions>
+	<Animations>
+		
+	</Animations>
+</TextureAtlas>

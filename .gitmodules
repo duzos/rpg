@@ -1,0 +1,3 @@
+[submodule "external/Summit"]
+	path = external/Summit
+	url = https://github.com/duzos/Summit.git
