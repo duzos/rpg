@@ -17,6 +17,14 @@
 		<Region name="grass-centres" x="0" y="97" width="140" height="20"></Region>
 		<Region name="textbox" x="120" y="37" width="24" height="24"></Region>
 		<Region name="sign" x="208" y="117" width="20" height="20"></Region>
+		<Region name="banana-0" x="0" y="117" width="26" height="27"></Region>
+		<Region name="banana-1" x="26" y="117" width="26" height="27"></Region>
+		<Region name="banana-2" x="52" y="117" width="26" height="27"></Region>
+		<Region name="banana-3" x="78" y="117" width="26" height="27"></Region>
+		<Region name="banana-4" x="104" y="117" width="26" height="27"></Region>
+		<Region name="banana-5" x="130" y="117" width="26" height="27"></Region>
+		<Region name="banana-6" x="156" y="117" width="26" height="27"></Region>
+		<Region name="banana-7" x="182" y="117" width="26" height="27"></Region>
 	</Regions>
 	<Animations>
 		

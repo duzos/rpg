@@ -13,6 +13,9 @@
 		<Exit x="0" y="6" width="1" height="3" room="west-road" spawn="east-gate" facing="West" />
 		<Exit x="17" y="6" width="1" height="3" room="east-road" spawn="west-gate" facing="East" />
 	</Exits>
+	<Npcs>
+		<Npc type="banana" x="8" y="6" />
+	</Npcs>
 	<Cells>
 		0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0
 		0,1,1,1,0,0,0,2,2,2,0,0,0,0,1,1,1,0

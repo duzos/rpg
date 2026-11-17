@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RpgProject.Battle;
 using RpgProject.Dialogue;
 using RpgProject.World;
 using SummitKit;
@@ -14,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RpgProject.Player;
-public class Character : Entity
+public class Character : Entity, IBattleStats
 {
     public float Speed { get; set; } = 1f;
 
@@ -41,7 +42,7 @@ public class Character : Entity
 
     private void TryInteract()
     {
-        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart) return;
+        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || BattleState.InBattle) return;
         if (!Core.Input.Keyboard.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.Space)) return;
 
         var box = InteractBox;
@@ -57,7 +58,7 @@ public class Character : Entity
 
     private void UpdateInputs()
     {
-        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.InDialogue)
+        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.InDialogue || BattleState.InBattle)
         {
             for (int i = 0; i < inputs.Length; i++)
             {
@@ -80,7 +81,7 @@ public class Character : Entity
 
     private void Move()
     {
-        if (RoomManager.Instance.Transitioning || TextBox.InDialogue) return;
+        if (RoomManager.Instance.Transitioning || TextBox.InDialogue || BattleState.InBattle) return;
 
         Vector2 movement = Vector2.Zero;
         if (inputs[0]) movement.Y -= 1; // W
@@ -192,8 +193,8 @@ public class Character : Entity
         {
             Direction.North => "back",
             Direction.South => "forward",
-            Direction.East => "left",
-            Direction.West => "right",
+            Direction.East => "right",
+            Direction.West => "left",
             _ => "forward"
         };
     }
@@ -224,6 +225,10 @@ public class Character : Entity
 
     public Rectangle Feet => FeetAt(Position);
     public Rectangle InteractBox => InteractBoxAt(Position);
+
+    public int Health { get; set; } = 20;
+    public int MaxHealth { get; set; } = 20;
+    public int Attack { get; set; } = 1;
 
     public void PlaceFeetOnTile(Tilemap map, int x, int y)
     {

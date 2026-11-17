@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using RpgProject.Battle;
 using RpgProject.Dialogue;
 using RpgProject.Npcs;
 using RpgProject.Player;
@@ -50,8 +51,6 @@ namespace RpgProject
             Camera.MinZoomStep = 0.05F;
 
             RoomManager.Instance.Travel("square", "default");
-
-            TextBox.Queue("hello there\nhow are you today?\ni'm good thanks\nend of dialogue lollololool");
         }
 
         protected override void LoadContent()
@@ -96,6 +95,8 @@ namespace RpgProject
         {
             RoomManager.Instance.Update(gameTime);
             TextBox.UpdateCurrent(gameTime);
+            BattleBackground.Instance.Update(gameTime);
+            BattleMusic.Instance.Update(gameTime);
             base.Update(gameTime);
         }
 
@@ -110,6 +111,7 @@ namespace RpgProject
         {
             base.DrawWorld(batch);
             RoomManager.Instance.Draw(batch);
+            BattleBackground.Instance.Draw(batch, Camera.VisibleArea);
         }
 
         protected override void DrawScreen(SpriteBatch batch)

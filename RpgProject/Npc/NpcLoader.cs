@@ -32,12 +32,11 @@ public static class NpcLoader
     private static Npc CreateNpc(Room room, XElement element)
     {
         string type = element.Attribute("type")?.Value ?? "talker";
-        var sound = ReadSound(room, element);
-        var lines = ReadLines(room, element);
 
         return type switch
         {
-            "talker" => new TalkingNpc(room, ReadSprite(room, element, null), lines, sound),
+            "banana" => new Banana(ReadSprite(room, element, "banana")),
+            "talker" => new TalkingNpc(room, ReadSprite(room, element, null), ReadLines(room, element), ReadSound(room, element)),
             _ => throw new InvalidDataException($"Room '{room.Name}': unknown npc type '{type}'."),
         };
     }

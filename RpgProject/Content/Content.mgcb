@@ -66,3 +66,9 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:assets/sfx/snd_great_shine.ogg
+
+#begin assets/sfx/rudebuster_boss.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:assets/sfx/rudebuster_boss.ogg
