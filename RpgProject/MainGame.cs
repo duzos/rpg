@@ -1,9 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+using RpgProject.Player;
 using RpgProject.World;
 using SummitKit;
+using SummitKit.Audio;
 using SummitKit.Graphics;
+using SummitKit.Physics;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection.Metadata;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace RpgProject
@@ -11,8 +21,11 @@ namespace RpgProject
     public class MainGame : Core
     {
         public static TextureAtlas Atlas { get; private set; }
-        public static Tilemap Map { get; private set; }
         private SpriteFont _font;
+
+        public static Entity Player { get; private set; }
+        public static readonly Dictionary<string, Song> Music = new Dictionary<string, Song>();
+
         public MainGame() : base("RPG Project", 1280, 720, false)
         {
             
@@ -22,12 +35,15 @@ namespace RpgProject
         {
             base.Initialize();
 
+            Console.Commands.Register(new RoomCommand());
+
             Entities.LockToScreenBounds = false;
-            var player = new Player.Character();
-            Entities.AddEntity(player);
-            Camera.Follow(player);
+            Player = new Character();
+            Entities.AddEntity(Player);
+            Camera.Follow(Player);
             Camera.Zoom = 7.5F;
-            player.PlaceFeetOnTile(Map, 5, 5);
+
+            RoomManager.Instance.Travel(RoomManager.Instance.Rooms.First().Key, null);
         }
 
         protected override void LoadContent()
@@ -36,35 +52,28 @@ namespace RpgProject
             ConsoleFont = _font;
 
             base.LoadContent();
+            LoadMusic(Content);
             Atlas = TextureAtlas.FromFile(Content, "assets/atlas-definition.xml");
 
-            Tile[] palette = [
-                new("grass", new Sprite(Atlas.GetRegion("grass"))),
-                new("black", new Sprite(Atlas.GetRegion("black")), true)
-            ];
+            Tile[] palette = Tile.FromFile(Content, Atlas, "tiles.xml");
+            RoomManager.Instance.LoadContent(Content, palette);   
+        }
 
-            int[,] cells =
+        private void LoadMusic(ContentManager content, string folderPath = "assets/music")
+        {
+            string fullFolderPath = Path.Combine(content.RootDirectory, folderPath);
+            if (!Directory.Exists(fullFolderPath)) throw new DirectoryNotFoundException($"Folder '{fullFolderPath}' not found.");
+            List<Song> songs = new List<Song>();
+            foreach (string file in Directory.GetFiles(fullFolderPath, "*.ogg"))
             {
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-                { 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1 },
-            };
-
-            Map = new Tilemap(palette, cells, 16);
-            Camera.Bounds = Map.Bounds;
+                var song = Content.Load<Song>(Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file)));
+                Music[Path.GetFileNameWithoutExtension(file)] = song;
+            }
         }
 
         protected override void Update(GameTime gameTime)
         {
-            Map.Update(gameTime);
+            RoomManager.Instance.Update(gameTime);
             base.Update(gameTime);
         }
 
@@ -78,7 +87,14 @@ namespace RpgProject
         protected override void DrawWorld(SpriteBatch batch)
         {
             base.DrawWorld(batch);
-            Map.Draw(batch, Camera.VisibleArea);
+            RoomManager.Instance.Draw(batch);
+        }
+
+        protected override void DrawScreen(SpriteBatch batch)
+        {
+            base.DrawScreen(batch);
+
+            RoomManager.Instance.DrawScreen(batch);
         }
     }
 }

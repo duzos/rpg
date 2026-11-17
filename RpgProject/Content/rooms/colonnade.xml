@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Room name="colonnade" tileSize="16" music="quiet_church">
+	<Spawns>
+		<Spawn name="east-gate" x="19" y="3" facing="West" />
+	</Spawns>
+	<Exits>
+		<Exit x="20" y="2" width="1" height="3" room="crossroads" spawn="west-gate" facing="East" />
+	</Exits>
+	<Cells>
+		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+		1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1
+		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1
+		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+	</Cells>
+</Room>

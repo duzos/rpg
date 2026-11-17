@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Room name="crossroads" tileSize="16" music="field_of_hopes">
+	<Spawns>
+		<Spawn name="default" x="5" y="5" facing="South" />
+		<Spawn name="north-gate" x="5" y="1" facing="South" />
+		<Spawn name="south-gate" x="5" y="9" facing="North" />
+		<Spawn name="west-gate" x="1" y="5" facing="East" />
+		<Spawn name="east-gate" x="9" y="5" facing="West" />
+	</Spawns>
+	<Exits>
+		<Exit x="4" y="0" width="3" height="1" room="meadow" spawn="south-gate" facing="North" />
+		<Exit x="4" y="10" width="3" height="1" room="maze" spawn="north-gate" facing="South" />
+		<Exit x="0" y="4" width="1" height="3" room="colonnade" spawn="east-gate" facing="West" />
+		<Exit x="10" y="4" width="1" height="3" room="pillar-hall" spawn="west-gate" facing="East" />
+	</Exits>
+	<Cells>
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+		0,0,0,0,0,0,0,0,0,0,0
+		0,0,0,0,0,0,0,0,0,0,0
+		0,0,0,0,0,0,0,0,0,0,0
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+		1,1,1,1,0,0,0,1,1,1,1
+	</Cells>
+</Room>

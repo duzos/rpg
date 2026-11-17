@@ -27,6 +27,10 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.*" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\tiles.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Content\rooms\*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\external\Summit\SummitKit\SummitKit.csproj" />
   </ItemGroup>
 </Project>

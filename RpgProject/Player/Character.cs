@@ -18,7 +18,7 @@ public class Character : Entity
     public float Speed { get; set; } = 1f;
 
     private bool[] inputs = new bool[4];
-    private int lastFacingDirection = 0; // 0: Up, 1: Down, 2: Left, 3: Right
+    private Direction lastFacingDirection = Direction.North;
     private Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
 
     public Character() : base(null)
@@ -28,7 +28,7 @@ public class Character : Entity
 
     private void UpdateInputs()
     {
-        if (Core.Console.Open)
+        if (Core.Console.Open || RoomManager.Instance.Transitioning)
         {
             for (int i = 0; i < inputs.Length; i++)
             {
@@ -42,11 +42,16 @@ public class Character : Entity
         inputs[2] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.A);
         inputs[3] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D);
 
-        lastFacingDirection = inputs[0] ? 0 : inputs[1] ? 1 : inputs[2] ? 2 : inputs[3] ? 3 : lastFacingDirection;
+        lastFacingDirection = inputs[0] ? Direction.North :
+                              inputs[1] ? Direction.South :
+                              inputs[2] ? Direction.West :
+                              inputs[3] ? Direction.East : lastFacingDirection;
     }
 
     private void Move()
     {
+        if (RoomManager.Instance.Transitioning) return;
+
         Vector2 movement = Vector2.Zero;
         if (inputs[0]) movement.Y -= 1; // W
         if (inputs[1]) movement.Y += 1; // S
@@ -60,10 +65,36 @@ public class Character : Entity
         Vector2 step = movement * Speed;
 
         var nextX = new Vector2(Position.X + step.X, Position.Y);
-        if (!MainGame.Map.IsSolid(FeetAt(nextX))) Position = nextX;
+        if (!RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(FeetAt(nextX))) Position = nextX;
 
         var nextY = new Vector2(Position.X, Position.Y + step.Y);
-        if (!MainGame.Map.IsSolid(FeetAt(nextY)) && nextY.Y >= MainGame.Map.Bounds.Top) Position = nextY;
+        if (!RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(FeetAt(nextY)) /*&& nextY.Y >= MainGame.Map.Bounds.Top*/) Position = nextY;
+    
+        var exit = CheckForExit();
+        if (exit is not null)
+        {
+            RoomManager.Instance.Travel(exit);
+        }
+    }
+
+    private Exit? CheckForExit()
+    {
+        var room = RoomManager.Instance.CurrentRoom;
+        foreach (var exit in room.Exits)
+        {
+            var exitArea = new Rectangle(exit.Region.X * room.Tilemap.TileSize, exit.Region.Y * room.Tilemap.TileSize, exit.Region.Width * room.Tilemap.TileSize, exit.Region.Height * room.Tilemap.TileSize);
+            if (exitArea.Intersects(Feet))
+            {
+                return exit;
+            }
+        }
+        return null;
+    }
+
+    public void SetFacing(Direction direction)
+    {
+        lastFacingDirection = direction;
+        Sprite = UpdateSprite();
     }
 
     public override void Update(GameTime deltaTime)
@@ -104,7 +135,7 @@ public class Character : Entity
 
             ], TimeSpan.FromSeconds(0.25D)));
 
-        val.Effects = lastFacingDirection == 3 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+        val.Effects = lastFacingDirection == Direction.East ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
         val.CenterOrigin();
         val.Shadow.Enabled = false;
 
@@ -113,14 +144,14 @@ public class Character : Entity
         return val;
     }
 
-    private static string GetDirectionKeyword(int direction)
+    private static string GetDirectionKeyword(Direction direction)
     {
         return direction switch
         {
-            0 => "back",
-            1 => "forward",
-            2 => "left",
-            3 => "right",
+            Direction.North => "back",
+            Direction.South => "forward",
+            Direction.East => "left",
+            Direction.West => "right",
             _ => "forward"
         };
     }
