@@ -33,11 +33,10 @@ public static class NpcLoader
     {
         string type = element.Attribute("type")?.Value ?? "talker";
         var sound = ReadSound(room, element);
-        var lines = ReadLines(room, element, allowEmpty: type == "banana");
+        var lines = ReadLines(room, element);
 
         return type switch
         {
-            "banana" => new Banana(room, ReadSprite(room, element, "banana"), lines.Count > 0 ? lines : Banana.DefaultLines, sound),
             "talker" => new TalkingNpc(room, ReadSprite(room, element, null), lines, sound),
             _ => throw new InvalidDataException($"Room '{room.Name}': unknown npc type '{type}'."),
         };

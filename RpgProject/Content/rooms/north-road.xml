@@ -6,22 +6,6 @@
 	<Exits>
 		<Exit x="5" y="21" width="3" height="1" room="square" spawn="north-gate" facing="South" />
 	</Exits>
-	<Signs>
-		<Sign x="4" y="20">
-			<Line>North Road.</Line>
-		</Sign>
-		<Sign x="4" y="8">
-			<Line>The Hendersons.</Line>
-			<Line>Please don't step on the grass.</Line>
-		</Sign>
-		<Sign x="8" y="13">
-			<Line>Number 12.</Line>
-		</Sign>
-		<Sign x="10" y="2">
-			<Line>Dead end.</Line>
-			<Line>Turn around.</Line>
-		</Sign>
-	</Signs>
 	<Cells>
 		0,0,0,0,0,0,0,0,0,0,0,0,0
 		0,0,0,2,2,2,2,2,2,2,0,0,0
