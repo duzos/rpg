@@ -41,9 +41,10 @@ namespace RpgProject
             Player = new Character();
             Entities.AddEntity(Player);
             Camera.Follow(Player);
-            Camera.Zoom = 7.5F;
+            Camera.Zoom = 4F;
+            Camera.MinZoomStep = 0.05F;
 
-            RoomManager.Instance.Travel(RoomManager.Instance.Rooms.First().Key, null);
+            RoomManager.Instance.Travel("square", "default");
         }
 
         protected override void LoadContent()

@@ -17,7 +17,7 @@ public class Character : Entity
 {
     public float Speed { get; set; } = 1f;
 
-    private bool[] inputs = new bool[4];
+    private bool[] inputs = new bool[5];
     private Direction lastFacingDirection = Direction.North;
     private Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
 
@@ -41,6 +41,7 @@ public class Character : Entity
         inputs[1] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S);
         inputs[2] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.A);
         inputs[3] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D);
+        inputs[4] = Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
 
         lastFacingDirection = inputs[0] ? Direction.North :
                               inputs[1] ? Direction.South :
@@ -62,7 +63,7 @@ public class Character : Entity
             movement.Normalize();
         }
 
-        Vector2 step = movement * Speed;
+        Vector2 step = movement * (Speed * (inputs[4] ? 1.5F : 1F));
 
         var nextX = new Vector2(Position.X + step.X, Position.Y);
         if (!RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(FeetAt(nextX))) Position = nextX;

@@ -11,8 +11,10 @@
 		<Region name="char-back-idle" x="114" y="0" width="19" height="37"></Region>
 		<Region name="char-back-walk-1" x="133" y="0" width="19" height="37"></Region>
 		<Region name="char-back-walk-2" x="152" y="0" width="19" height="37"></Region>
-		<Region name="grass" x="0" y="37" width="20" height="20"></Region>
-		<Region name="black" x="20" y="37" width="20" height="20"></Region>
+		<Region name="grass" x="0" y="37" width="60" height="60"></Region>
+		<Region name="concrete" x="60" y="37" width="60" height="60"></Region>
+		<Region name="dirt" x="160" y="37" width="60" height="60"></Region>
+		<Region name="grass-centres" x="0" y="97" width="140" height="20"></Region>
 	</Regions>
 	<Animations>
 		

@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tiles>
-	<Tile id="0" name="grass" region="grass"></Tile>
-	<Tile id="1" name="black" region="black" solid="true"></Tile>
+	<Tile id="0" name="grass" region="grass" autotile="9" variants="grass-centres" variantChance="0.35"></Tile>
+	<Tile id="1" name="concrete" region="concrete" solid="true" autotile="9" priority="2"></Tile>
+	<Tile id="2" name="dirt" region="dirt" autotile="9" priority="1"></Tile>
 </Tiles>

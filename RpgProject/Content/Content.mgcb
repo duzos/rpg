@@ -28,53 +28,13 @@
 /processorParam:TextureFormat=Color
 /build:assets/atlas.png
 
-#begin assets/music/card_castle.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/card_castle.ogg
 
-#begin assets/music/card_castle.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/card_castle.ogg
 
-#begin assets/music/field_of_hopes.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/field_of_hopes.ogg
 
-#begin assets/music/field_of_hopes.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/field_of_hopes.ogg
 
-#begin assets/music/forest.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/forest.ogg
 
-#begin assets/music/forest.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/forest.ogg
 
-#begin assets/music/quiet_church.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/quiet_church.ogg
 
-#begin assets/music/quiet_church.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/processorParam:Quality=Best
-/build:assets/music/quiet_church.ogg
 
 #begin assets/primary.spritefont
 /importer:FontDescriptionImporter
@@ -83,3 +43,20 @@
 /processorParam:TextureFormat=Compressed
 /build:assets/primary.spritefont
 
+#begin assets/music/happy_town.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:assets/music/happy_town.ogg
+
+#begin assets/music/creepylandscape.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:assets/music/creepylandscape.ogg
+
+#begin assets/music/dark_place.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:assets/music/dark_place.ogg

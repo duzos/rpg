@@ -30,7 +30,7 @@ public sealed class Room(string name, Dictionary<string, SpawnPoint> spawns, Lis
         if (Song is not null) {
             if (Song == MusicTracker.CurrentMusic) return;
 
-            Core.Audio.Music.FadeInto(Song, TimeSpan.FromSeconds(0.5), TimeSpan.FromSeconds(0.5), true);
+            Core.Audio.Music.FadeInto(Song, TimeSpan.FromSeconds(0.25), TimeSpan.FromSeconds(0.25), true);
         }
     }
     public void Draw(SpriteBatch spriteBatch)
@@ -155,7 +155,8 @@ public sealed class Room(string name, Dictionary<string, SpawnPoint> spawns, Lis
         if (song is not null && !MainGame.Music.TryGetValue(song, out songAsset))
             throw new InvalidDataException($"Room '{name}': music '{song}' is not loaded. Available: {string.Join(", ", MainGame.Music.Keys.Order())}");
 
-        return new Room(name, spawns, exits, new Tilemap(palette, cellArray, tileSize), songAsset);
+        var tilemap = new Tilemap(palette, cellArray, tileSize) { Seed = Tilemap.StableHash(name) };
+        return new Room(name, spawns, exits, tilemap, songAsset);
     }
 }
 
