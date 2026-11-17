@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RpgProject.Dialogue;
 using RpgProject.World;
 using SummitKit;
 using SummitKit.Graphics;
@@ -24,11 +25,39 @@ public class Character : Entity
     public Character() : base(null)
     {
         Sprite = UpdateSprite();
+        Draggable = false;
+        Clickable = false;
+    }
+
+    public Direction Facing => lastFacingDirection;
+
+    private static bool Blocked(Rectangle feet, List<Rectangle> solids)
+    {
+        if (RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(feet)) return true;
+        foreach (var box in solids)
+            if (box.Intersects(feet)) return true;
+        return false;
+    }
+
+    private void TryInteract()
+    {
+        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart) return;
+        if (!Core.Input.Keyboard.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.Space)) return;
+
+        var box = InteractBox;
+        var feet = Feet.Center.ToVector2();
+        var target = Core.Entities.Entities
+            .OfType<IInteractable>()
+            .Where(i => !ReferenceEquals(i, this) && i.InteractArea.Intersects(box))
+            .OrderBy(i => Vector2.DistanceSquared(i.InteractArea.Center.ToVector2(), feet))
+            .FirstOrDefault();
+
+        target?.OnInteract(this);
     }
 
     private void UpdateInputs()
     {
-        if (Core.Console.Open || RoomManager.Instance.Transitioning)
+        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.InDialogue)
         {
             for (int i = 0; i < inputs.Length; i++)
             {
@@ -51,7 +80,7 @@ public class Character : Entity
 
     private void Move()
     {
-        if (RoomManager.Instance.Transitioning) return;
+        if (RoomManager.Instance.Transitioning || TextBox.InDialogue) return;
 
         Vector2 movement = Vector2.Zero;
         if (inputs[0]) movement.Y -= 1; // W
@@ -65,11 +94,18 @@ public class Character : Entity
 
         Vector2 step = movement * (Speed * (inputs[4] ? 1.5F : 1F));
 
+        var solids = Core.Entities.Entities
+            .OfType<ISolid>()
+            .Where(s => !ReferenceEquals(s, this))
+            .Select(s => s.CollisionBox)
+            .Where(box => !box.Intersects(Feet))
+            .ToList();
+
         var nextX = new Vector2(Position.X + step.X, Position.Y);
-        if (!RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(FeetAt(nextX))) Position = nextX;
+        if (!Blocked(FeetAt(nextX), solids)) Position = nextX;
 
         var nextY = new Vector2(Position.X, Position.Y + step.Y);
-        if (!RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(FeetAt(nextY)) /*&& nextY.Y >= MainGame.Map.Bounds.Top*/) Position = nextY;
+        if (!Blocked(FeetAt(nextY), solids)) Position = nextY;
     
         var exit = CheckForExit();
         if (exit is not null)
@@ -103,13 +139,18 @@ public class Character : Entity
         Sprite = UpdateSprite();
         UpdateInputs();
         Move();
+        TryInteract();
         base.Update(deltaTime);
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
         base.Draw(spriteBatch);
-        if (IUIElement.Debug) spriteBatch.Draw(Core.Pixel, Feet, Color.Orange * 0.6f);
+        if (IUIElement.Debug)
+        {
+            spriteBatch.Draw(Core.Pixel, Feet, Color.Orange * 0.6f);
+            spriteBatch.Draw(Core.Pixel, InteractBox, Color.Blue * 0.5f);
+        }
     }
 
     private Sprite UpdateSprite()
@@ -166,7 +207,23 @@ public class Character : Entity
         return new Rectangle((int)position.X + inset, (int)position.Y + box.Height - height, box.Width - inset * 2, height);
     }
 
+    private Rectangle InteractBoxAt(Vector2 position)
+    {
+        var feet = FeetAt(position);
+        int reach = RoomManager.Instance.CurrentRoom?.Tilemap.TileSize ?? 20;
+        int across = Math.Max(reach, AABB.Width);
+        var centre = feet.Center;
+        return lastFacingDirection switch
+        {
+            Direction.North => new Rectangle(centre.X - across / 2, feet.Top - reach, across, reach),
+            Direction.South => new Rectangle(centre.X - across / 2, feet.Bottom, across, reach),
+            Direction.West => new Rectangle(feet.Left - reach, centre.Y - across / 2, reach, across),
+            _ => new Rectangle(feet.Right, centre.Y - across / 2, reach, across),
+        };
+    }
+
     public Rectangle Feet => FeetAt(Position);
+    public Rectangle InteractBox => InteractBoxAt(Position);
 
     public void PlaceFeetOnTile(Tilemap map, int x, int y)
     {

@@ -60,3 +60,9 @@
 /processor:SongProcessor
 /processorParam:Quality=Best
 /build:assets/music/dark_place.ogg
+
+#begin assets/sfx/snd_great_shine.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:assets/sfx/snd_great_shine.ogg

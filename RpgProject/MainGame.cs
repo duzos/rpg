@@ -1,8 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using RpgProject.Dialogue;
+using RpgProject.Npcs;
 using RpgProject.Player;
 using RpgProject.World;
 using SummitKit;
@@ -25,6 +28,7 @@ namespace RpgProject
 
         public static Entity Player { get; private set; }
         public static readonly Dictionary<string, Song> Music = new Dictionary<string, Song>();
+        public static readonly Dictionary<string, SoundEffect> Sounds = new Dictionary<string, SoundEffect>();
 
         public MainGame() : base("RPG Project", 1280, 720, false)
         {
@@ -38,6 +42,7 @@ namespace RpgProject
             Console.Commands.Register(new RoomCommand());
 
             Entities.LockToScreenBounds = false;
+            Entities.DrawOrder = (a, b) => a.AABB.Bottom.CompareTo(b.AABB.Bottom);
             Player = new Character();
             Entities.AddEntity(Player);
             Camera.Follow(Player);
@@ -45,6 +50,8 @@ namespace RpgProject
             Camera.MinZoomStep = 0.05F;
 
             RoomManager.Instance.Travel("square", "default");
+
+            TextBox.Queue("hello there\nhow are you today?\ni'm good thanks\nend of dialogue lollololool");
         }
 
         protected override void LoadContent()
@@ -54,10 +61,27 @@ namespace RpgProject
 
             base.LoadContent();
             LoadMusic(Content);
+            LoadSounds(Content);
             Atlas = TextureAtlas.FromFile(Content, "assets/atlas-definition.xml");
 
             Tile[] palette = Tile.FromFile(Content, Atlas, "tiles.xml");
-            RoomManager.Instance.LoadContent(Content, palette);   
+            RoomManager.Instance.LoadContent(Content, palette);
+
+            var square = RoomManager.Instance.Rooms["square"];
+            var banana = new Banana(square);
+            banana.PlaceOnTile(square.Tilemap, 10, 5);
+            square.Npcs.Add(banana);
+        }
+
+        private void LoadSounds(ContentManager content, string folderPath = "assets/sfx")
+        {
+            string fullFolderPath = Path.Combine(content.RootDirectory, folderPath);
+            if (!Directory.Exists(fullFolderPath)) return;
+            foreach (string file in Directory.GetFiles(fullFolderPath, "*.xnb"))
+            {
+                string name = Path.GetFileNameWithoutExtension(file);
+                Sounds[name] = content.Load<SoundEffect>(Path.Combine(folderPath, name));
+            }
         }
 
         private void LoadMusic(ContentManager content, string folderPath = "assets/music")
@@ -75,6 +99,7 @@ namespace RpgProject
         protected override void Update(GameTime gameTime)
         {
             RoomManager.Instance.Update(gameTime);
+            TextBox.UpdateCurrent(gameTime);
             base.Update(gameTime);
         }
 
@@ -96,6 +121,7 @@ namespace RpgProject
             base.DrawScreen(batch);
 
             RoomManager.Instance.DrawScreen(batch);
+            TextBox.Current?.DrawScreen(batch);
         }
     }
 }

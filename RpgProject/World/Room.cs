@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Media;
 using SummitKit;
 using SummitKit.Audio;
 using SummitKit.Graphics;
+using SummitKit.Physics;
 using SummitKit.UI;
 using System;
 using System.Collections.Generic;
@@ -25,8 +26,18 @@ public sealed class Room(string name, Dictionary<string, SpawnPoint> spawns, Lis
     public Song? Song { get; } = song;
     public float LayerDepth { get; set; }
 
-    public void OnLeave() { }
+    public List<Entity> Npcs { get; } = [];
+
+    public void OnLeave()
+    {
+        foreach (var npc in Npcs)
+            if (!npc.IsRemoved) Core.Entities.RemoveEntity(npc);
+    }
+
     public void OnEnter(SpawnPoint spawnPoint) {
+        foreach (var npc in Npcs)
+            if (npc.IsRemoved) Core.Entities.AddEntity(npc);
+
         if (Song is not null) {
             if (Song == MusicTracker.CurrentMusic) return;
 
