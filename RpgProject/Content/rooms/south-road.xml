@@ -6,6 +6,19 @@
 	<Exits>
 		<Exit x="5" y="0" width="3" height="1" room="square" spawn="south-gate" facing="North" />
 	</Exits>
+	<Signs>
+		<Sign x="4" y="1">
+			<Line>Turn back.</Line>
+		</Sign>
+		<Sign x="12" y="12">
+			<Line>It's quieter down here...</Line>
+		</Sign>
+		<Sign x="13" y="19">
+			<Line>You found the end.</Line>
+			<Line>Nothing here.</Line>
+			<Line>...or is there?</Line>
+		</Sign>
+	</Signs>
 	<Cells>
 		0,0,0,0,0,2,2,2,0,0,0,0,0,0
 		0,0,0,0,0,2,2,2,0,0,0,0,0,0

@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
-using RpgProject.Dialogue;
-using RpgProject.Player;
+using Microsoft.Xna.Framework.Audio;
 using RpgProject.World;
 using SummitKit.Graphics;
 using System;
@@ -9,41 +8,26 @@ using System.Linq;
 
 namespace RpgProject.Npcs;
 
-public sealed class Banana : Npc
+public sealed class Banana(Room room, Sprite sprite, IReadOnlyList<string> lines, SoundEffect? sound)
+    : TalkingNpc(room, sprite, lines, sound)
 {
-    private static readonly string[] Lines =
+    public static readonly string[] DefaultLines =
     [
         "Oh! A visitor!",
         "I'm the town banana. I like to keep moving.",
         "Catch me if you can!",
     ];
 
-    private readonly Room _room;
-
-    public Banana(Room room) : base(CreateSprite())
-    {
-        _room = room;
-    }
-
-    private static Sprite CreateSprite()
-    {
-        var frames = Enumerable.Range(0, 8).Select(i => MainGame.Atlas.GetRegion($"banana-{i}")).ToList();
-        return new AnimatedSprite(new Animation(frames, TimeSpan.FromSeconds(0.1)));
-    }
-
-    public override void OnInteract(Character player)
-    {
-        MainGame.Sounds.TryGetValue("snd_great_shine", out var sound);
-        TextBox.Say(Lines, sound, MoveSomewhere);
-    }
+    protected override void OnConversationEnd() => MoveSomewhere();
 
     private void MoveSomewhere()
     {
-        var map = _room.Tilemap;
+        var map = Room.Tilemap;
         var player = MainGame.Player.Position;
-        var exitTiles = new HashSet<Point>(_room.Exits.SelectMany(e =>
+        var exitTiles = new HashSet<Point>(Room.Exits.SelectMany(e =>
             Enumerable.Range(e.Region.X, e.Region.Width).SelectMany(x =>
                 Enumerable.Range(e.Region.Y, e.Region.Height).Select(y => new Point(x, y)))));
+        var solids = Room.Npcs.OfType<ISolid>().Where(s => !ReferenceEquals(s, this)).Select(s => s.CollisionBox).ToList();
 
         var candidates = new List<Point>();
         for (int y = 1; y < map.Rows; y++)
@@ -54,6 +38,8 @@ public sealed class Banana : Npc
                 if (map.GetTile(x, y)?.Solid != false || map.GetTile(x, y - 1)?.Solid != false) continue;
                 if (exitTiles.Contains(point)) continue;
                 if (Vector2.Distance(map.TileToWorld(x, y), player) < map.TileSize * 4) continue;
+                var cell = new Rectangle(x * map.TileSize, y * map.TileSize, map.TileSize, map.TileSize);
+                if (solids.Any(s => s.Intersects(cell))) continue;
                 candidates.Add(point);
             }
         }

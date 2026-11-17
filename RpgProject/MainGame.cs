@@ -67,10 +67,6 @@ namespace RpgProject
             Tile[] palette = Tile.FromFile(Content, Atlas, "tiles.xml");
             RoomManager.Instance.LoadContent(Content, palette);
 
-            var square = RoomManager.Instance.Rooms["square"];
-            var banana = new Banana(square);
-            banana.PlaceOnTile(square.Tilemap, 10, 5);
-            square.Npcs.Add(banana);
         }
 
         private void LoadSounds(ContentManager content, string folderPath = "assets/sfx")

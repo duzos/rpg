@@ -6,6 +6,18 @@
 	<Exits>
 		<Exit x="23" y="5" width="1" height="3" room="square" spawn="west-gate" facing="East" />
 	</Exits>
+	<Signs>
+		<Sign x="21" y="4">
+			<Line>West Road.</Line>
+		</Sign>
+		<Sign x="11" y="8">
+			<Line>Lovely weather on West Road today.</Line>
+		</Sign>
+		<Sign x="6" y="2">
+			<Line>End of the road.</Line>
+			<Line>Nice view, though.</Line>
+		</Sign>
+	</Signs>
 	<Cells>
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 		0,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0

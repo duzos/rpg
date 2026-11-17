@@ -6,6 +6,18 @@
 	<Exits>
 		<Exit x="0" y="5" width="1" height="3" room="square" spawn="east-gate" facing="West" />
 	</Exits>
+	<Signs>
+		<Sign x="2" y="4">
+			<Line>East Road.</Line>
+		</Sign>
+		<Sign x="9" y="8">
+			<Line>Keep out.</Line>
+		</Sign>
+		<Sign x="23" y="6">
+			<Line>This road ends here.</Line>
+			<Line>Something feels off.</Line>
+		</Sign>
+	</Signs>
 	<Cells>
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 		0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0

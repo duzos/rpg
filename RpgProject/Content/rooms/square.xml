@@ -13,6 +13,30 @@
 		<Exit x="0" y="6" width="1" height="3" room="west-road" spawn="east-gate" facing="West" />
 		<Exit x="17" y="6" width="1" height="3" room="east-road" spawn="west-gate" facing="East" />
 	</Exits>
+	<Npcs>
+		<Npc type="banana" x="10" y="5" sound="snd_great_shine" />
+	</Npcs>
+	<Signs>
+		<Sign x="5" y="4">
+			<Line>Welcome to the Town Square!</Line>
+		</Sign>
+		<Sign x="6" y="1">
+			<Line>North Road.</Line>
+			<Line>Houses, and a quiet cul-de-sac at the top.</Line>
+		</Sign>
+		<Sign x="10" y="12">
+			<Line>South Road.</Line>
+			<Line>The locals don't go down there.</Line>
+		</Sign>
+		<Sign x="1" y="5">
+			<Line>West Road.</Line>
+			<Line>Mind the long walk.</Line>
+		</Sign>
+		<Sign x="16" y="9">
+			<Line>East Road.</Line>
+			<Line>Shops coming soon!</Line>
+		</Sign>
+	</Signs>
 	<Cells>
 		0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0
 		0,1,1,1,0,0,0,2,2,2,0,0,0,0,1,1,1,0

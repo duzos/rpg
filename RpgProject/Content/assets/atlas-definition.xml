@@ -24,6 +24,7 @@
 		<Region name="banana-5" x="130" y="117" width="26" height="27"></Region>
 		<Region name="banana-6" x="156" y="117" width="26" height="27"></Region>
 		<Region name="banana-7" x="182" y="117" width="26" height="27"></Region>
+		<Region name="sign" x="208" y="117" width="20" height="20"></Region>
 	</Regions>
 	<Animations>
 		

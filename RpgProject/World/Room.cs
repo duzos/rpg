@@ -167,7 +167,9 @@ public sealed class Room(string name, Dictionary<string, SpawnPoint> spawns, Lis
             throw new InvalidDataException($"Room '{name}': music '{song}' is not loaded. Available: {string.Join(", ", MainGame.Music.Keys.Order())}");
 
         var tilemap = new Tilemap(palette, cellArray, tileSize) { Seed = Tilemap.StableHash(name) };
-        return new Room(name, spawns, exits, tilemap, songAsset);
+        var room = new Room(name, spawns, exits, tilemap, songAsset);
+        RpgProject.Npcs.NpcLoader.Load(root, room);
+        return room;
     }
 }
 
