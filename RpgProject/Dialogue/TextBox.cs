@@ -118,19 +118,19 @@ public sealed class TextBox(string content, string region = "textbox", Sprite? t
         else Upcoming.Enqueue(box);
     }
 
-    public static void Queue(string list, string region="textbox", Sprite[]? talkSprites = null, SoundEffect[]? talkSounds = null)
-    {
-        string[] lines = list.Split("\n");
-        talkSprites ??= [];
-        talkSounds ??= [];
-        int i = 0;
-        foreach (string line in lines)
-        {
-            Sprite? sprite = talkSprites.Length == 0 ? null : talkSprites[Math.Min(i, talkSprites.Length - 1)].Clone();
-            SoundEffect? sound = talkSounds.Length == 0 ? null : talkSounds[Math.Min(i, talkSounds.Length - 1)];
+    public static void Queue(string list, string region = "textbox") =>
+        Queue(list.Split('\n').Select(line => (DialogueLine)line), region);
 
-            Queue(new(line, region, sprite, sound));
-            i++;
+    public static void Queue(IEnumerable<DialogueLine> lines, string region = "textbox")
+    {
+        Sprite? sprite = null;
+        SoundEffect? sound = null;
+
+        foreach (var line in lines)
+        {
+            sprite = line.NoSprite ? null : line.Sprite ?? sprite;
+            sound = line.NoSound ? null : line.Sound ?? sound;
+            Queue(new TextBox(line.Text, region, sprite?.Clone(), sound));
         }
     }
 
