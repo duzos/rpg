@@ -18,28 +18,18 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
     public Color HealthBarColour { get; set; } = Color.Yellow;
 
     public override void OnInteract(Character player) {
+        if (BattleState.Current is not null)
+        {
+            BattleState.Current.End();
+            TextBox.Queue("gg");
+            return;
+        }
+
         Health = MaxHealth;
         player.Health = player.MaxHealth;
 
         var battle = new BattleState([player], [this], "black_knife");
         battle.Start();
         TextBox.Queue("potassium.");
-        Scheduler.Repeat((task) => {
-            if (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Q))
-            {
-                battle.End();
-                task.Cancelled = true;
-            }
-            if (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R))
-            {
-                this.Health -= 1;
-            }
-            if (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.E))
-            {
-                ((Character) (MainGame.Player)).Health -= 1;
-            }
-
-            }
-            , TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(0.1));
     }
 }
