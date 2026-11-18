@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using RpgProject.Battle;
 using RpgProject.Dialogue;
 using RpgProject.Player;
@@ -32,6 +32,8 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
         battle.Start();
         TextBox.Queue([("potassium.", Sprite, MainGame.Sounds["snd_text"]), "let's do this."]);
 
+        bool lob = false;
+
         Scheduler.Repeat((task) => {
             if (BattleState.Current != battle)
             {
@@ -39,11 +41,25 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
                 return;
             }
 
-            var bullet = new AimedBullet(Sprite.Clone())
+            if (!lob)
             {
-                Attack = 1
-            };
-            bullet.Spawn(AABB.Center.ToVector2());
-        }, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1.5F));
+                var bullet = new AimedBullet(Sprite.Clone())
+                {
+                    Attack = 5
+                };
+                bullet.Spawn(AABB.Center.ToVector2());
+            } else
+            {
+                var bullet = new ArcBullet(Sprite.Clone())
+                {
+                    Attack = 10,
+                    Target = Character.PlayerFeetCentre
+                };
+                bullet.Spawn(AABB.Center.ToVector2());
+
+            }
+            lob = !lob;
+
+        }, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2.5F));
     }
 }

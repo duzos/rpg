@@ -217,6 +217,9 @@ public class Character : Entity, IBattleStats
 
     private Rectangle FeetAt(Vector2 position) => FeetAt(position, AABB);
 
+    public static Rectangle PlayerFeet => FeetAt(MainGame.Player.Position, MainGame.Player.AABB);
+    public static Vector2 PlayerFeetCentre => PlayerFeet.Center.ToVector2();
+
     private Rectangle AabbAt(Vector2 position)
     {
         var box = AABB;
