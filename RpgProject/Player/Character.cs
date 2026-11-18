@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 namespace RpgProject.Player;
 public class Character : Entity, IBattleStats
 {
-    public float Speed { get; set; } = 1f;
+    public float Speed => 1f * (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ? 1.5F : 1F) * (BattleState.Current is not null ? 2F : 1F);
 
     private bool[] inputs = new bool[5];
     private Direction lastFacingDirection = Direction.North;
@@ -32,18 +32,22 @@ public class Character : Entity, IBattleStats
 
     public Direction Facing => lastFacingDirection;
     public Color HealthBarColour { get; set; } = Color.Lime;
+    public bool CanMove => !(Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || MoveTarget is not null);
 
-    private static bool Blocked(Rectangle feet, List<Rectangle> solids)
+    private bool Blocked(Vector2 position, List<Rectangle> solids)
     {
-        if (RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(feet)) return true;
+        var feet = FeetAt(position);
+        if (BattleState.Current is null && RoomManager.Instance.CurrentRoom.Tilemap.IsSolid(feet)) return true;
+        if (BattleState.Current is not null && !Core.Camera.VisibleArea.Contains(AabbAt(position))) return true;
+
         foreach (var box in solids)
-            if (box.Intersects(feet)) return true;
+             if (box.Intersects(feet)) return true;
         return false;
     }
 
     private void TryInteract()
     {
-        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || BattleState.InBattle) return;
+        if (!CanMove) return;
         if (!Core.Input.Keyboard.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.Space)) return;
 
         var box = InteractBox;
@@ -58,8 +62,8 @@ public class Character : Entity, IBattleStats
     }
 
     private void UpdateInputs()
-    {
-        if (Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.InDialogue || BattleState.InBattle)
+    { 
+        if (!CanMove)
         {
             for (int i = 0; i < inputs.Length; i++)
             {
@@ -82,7 +86,7 @@ public class Character : Entity, IBattleStats
 
     private void Move()
     {
-        if (RoomManager.Instance.Transitioning || TextBox.InDialogue || BattleState.InBattle) return;
+        if (!CanMove) return;
 
         Vector2 movement = Vector2.Zero;
         if (inputs[0]) movement.Y -= 1; // W
@@ -94,7 +98,7 @@ public class Character : Entity, IBattleStats
             movement.Normalize();
         }
 
-        Vector2 step = movement * (Speed * (inputs[4] ? 1.5F : 1F));
+        Vector2 step = movement * (Speed);
 
         var solids = Core.Entities.Entities
             .OfType<ISolid>()
@@ -104,10 +108,10 @@ public class Character : Entity, IBattleStats
             .ToList();
 
         var nextX = new Vector2(Position.X + step.X, Position.Y);
-        if (!Blocked(FeetAt(nextX), solids)) Position = nextX;
+        if (!Blocked(nextX, solids)) Position = nextX;
 
         var nextY = new Vector2(Position.X, Position.Y + step.Y);
-        if (!Blocked(FeetAt(nextY), solids)) Position = nextY;
+        if (!Blocked(nextY, solids)) Position = nextY;
     
         var exit = CheckForExit();
         if (exit is not null)
@@ -118,6 +122,8 @@ public class Character : Entity, IBattleStats
 
     private Exit? CheckForExit()
     {
+        if (BattleState.Current is not null) return null;
+
         var room = RoomManager.Instance.CurrentRoom;
         foreach (var exit in room.Exits)
         {
@@ -207,6 +213,12 @@ public class Character : Entity, IBattleStats
         int height = box.Height / 4;
         int inset = box.Width / 4;
         return new Rectangle((int)position.X + inset, (int)position.Y + box.Height - height, box.Width - inset * 2, height);
+    }
+
+    private Rectangle AabbAt(Vector2 position)
+    {
+        var box = AABB;
+        return new Rectangle((int)position.X, (int)position.Y, box.Width, box.Height);
     }
 
     private Rectangle InteractBoxAt(Vector2 position)
