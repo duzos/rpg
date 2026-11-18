@@ -17,11 +17,11 @@ using System.Threading.Tasks;
 namespace RpgProject.Player;
 public class Character : Entity, IBattleStats
 {
-    public float Speed => 1f * (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ? 1.5F : 1F) * (BattleState.Current is not null ? 2F : 1F);
+    public float Speed => 60f * (Core.Input.Keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ? 1.5F : 1F) * (BattleState.Current is not null ? 2F : 1F);
 
-    private bool[] inputs = new bool[5];
+    private readonly bool[] inputs = new bool[5];
     private Direction lastFacingDirection = Direction.North;
-    private Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
+    private readonly Dictionary<string, Sprite> sprites = [];
 
     public Character() : base(null)
     {
@@ -84,7 +84,7 @@ public class Character : Entity, IBattleStats
                               inputs[3] ? Direction.East : lastFacingDirection;
     }
 
-    private void Move()
+    private void Move(GameTime time)
     {
         if (!CanMove) return;
 
@@ -98,7 +98,7 @@ public class Character : Entity, IBattleStats
             movement.Normalize();
         }
 
-        Vector2 step = movement * (Speed);
+        Vector2 step = movement * Speed * (float)time.ElapsedGameTime.TotalSeconds;
 
         var solids = Core.Entities.Entities
             .OfType<ISolid>()
@@ -146,7 +146,7 @@ public class Character : Entity, IBattleStats
     {
         Sprite = UpdateSprite();
         UpdateInputs();
-        Move();
+        Move(deltaTime);
         TryInteract();
         base.Update(deltaTime);
     }
@@ -207,13 +207,15 @@ public class Character : Entity, IBattleStats
     }
 
 
-    private Rectangle FeetAt(Vector2 position)
+    public static Rectangle FeetAt(Vector2 position, Rectangle aabb)
     {
-        var box = AABB;
+        var box = aabb;
         int height = box.Height / 4;
         int inset = box.Width / 4;
         return new Rectangle((int)position.X + inset, (int)position.Y + box.Height - height, box.Width - inset * 2, height);
     }
+
+    private Rectangle FeetAt(Vector2 position) => FeetAt(position, AABB);
 
     private Rectangle AabbAt(Vector2 position)
     {
