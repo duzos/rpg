@@ -11,7 +11,7 @@ using SummitKit.Util;
 
 namespace RpgProject.Battle;
 
-public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "rudebuster_boss") {
+public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "rudebuster_boss") : IUpdating {
     public static BattleState? Current = null;
     public static bool InBattle => Current != null;
 
@@ -124,6 +124,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         BattleBackground.Instance.Hide();
 
         foreach (var combatant in All) combatant.OnBattleEnd(this);
+        foreach (var bullet in Core.Entities.Entities.OfType<Bullet>().ToList()) bullet.Remove();
 
         if (Current == this) Current = null;
     }
@@ -136,6 +137,15 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         foreach (var e in All)
         {
             e.DrawHealthBar(batch);
+        }
+    }
+
+    public void Update(GameTime deltaTime)
+    {
+        if (All.Any(b => b.Health <= 0))
+        {
+            End();
+            return;
         }
     }
 }

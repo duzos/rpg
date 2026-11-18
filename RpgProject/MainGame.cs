@@ -98,6 +98,7 @@ namespace RpgProject
             TextBox.UpdateCurrent(gameTime);
             BattleBackground.Instance.Update(gameTime);
             BattleMusic.Instance.Update(gameTime);
+            BattleState.Current?.Update(gameTime);
             base.Update(gameTime);
         }
 
