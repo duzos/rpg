@@ -22,6 +22,8 @@ public interface IBattleStats {
 
     void DrawHealthBar(SpriteBatch batch, Color colour, Color bgColour, float offset, float x, float y, float height, float width, float padding = 0f)
     {
+        if (Health <= 0) return;
+
         var pixel = Core.Pixel;
         int left = (int)(x - width / 2f);
         int top = (int)(y - offset);

@@ -32,7 +32,9 @@ public class Character : Entity, IBattleStats
 
     public Direction Facing => lastFacingDirection;
     public Color HealthBarColour { get; set; } = Color.Lime;
-    public bool CanMove => !(Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || MoveTarget is not null);
+    private static bool BattleLocksMovement => BattleState.Current is { Phase: not BattlePhase.EnemyAttack };
+    public bool CanMove => !(Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || MoveTarget is not null || BattleLocksMovement);
+    public bool CanInteract => CanMove && !BattleState.InBattle;
 
     private bool Blocked(Vector2 position, List<Rectangle> solids)
     {
@@ -47,7 +49,7 @@ public class Character : Entity, IBattleStats
 
     private void TryInteract()
     {
-        if (!CanMove) return;
+        if (!CanInteract) return;
         if (!Core.Input.Keyboard.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.Space)) return;
 
         var box = InteractBox;

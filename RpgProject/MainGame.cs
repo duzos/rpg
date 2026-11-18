@@ -124,5 +124,6 @@ namespace RpgProject
             RoomManager.Instance.DrawScreen(batch);
             TextBox.Current?.DrawScreen(batch);
         }
+            BattleState.Current?.DrawScreen(batch);
     }
 }

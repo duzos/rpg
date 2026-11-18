@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using RpgProject.Dialogue;
 using RpgProject.Player;
 using RpgProject.World;
 using SummitKit;
@@ -8,12 +9,26 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using SummitKit.Util;
+using System.Threading.Tasks;
 
 namespace RpgProject.Battle;
 
 public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "rudebuster_boss") : IUpdating {
     public static BattleState? Current = null;
     public static bool InBattle => Current != null;
+
+    private BattlePhase _phase = BattlePhase.Intro;
+    private TimeSpan phaseElapsed = TimeSpan.Zero;
+    public BattlePhase Phase
+    {
+        get => _phase;
+        private set
+        {
+            _phase = value;
+            phaseElapsed = TimeSpan.Zero;
+            OnPhaseStart(value);
+        }
+    }
 
     public static readonly Vector2[] PlayerTeamPositions =
     [
@@ -24,14 +39,15 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
 
     public static readonly Vector2[] EnemiesPositions =
     [
-        new(100, -28),
+        new(100, -40),
         new(100, 0),
-        new(100, 28),
+        new(100, 40),
     ];
 
     public IBattleStats[] PlayerTeam { get; private set; } = Fill(playerTeam, PlayerTeamPositions.Length, "player team");
     public IBattleStats[] Enemies { get; private set; } = Fill(enemies, EnemiesPositions.Length, "enemy team");
-
+    public IBattleStats[]? Winners => Outcome is null ? null : (Outcome == BattleOutcome.Won ? PlayerTeam : Enemies);
+    public BattleOutcome? Outcome { get; private set; }
     public IReadOnlyList<IBattleStats> All => [.. PlayerTeam, .. Enemies];
 
     public Vector2 Anchor { get; private set; }
@@ -49,12 +65,24 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         return members;
     }
 
+    public void Advance() => Phase = Phase.Next();
+    private void OnPhaseStart(BattlePhase phase)
+    {
+        switch (phase)
+        {
+            case BattlePhase.Menu:
+                KillBullets();
+                MoveIntoPlace(BattlePhase.Intro.Duration() ?? TimeSpan.Zero);
+                break;
+        }
+    }
     public void Start(TimeSpan? moveDuration = null)
     {
         if (Current is not null && Current != this)
             throw new InvalidOperationException("A battle is already in progress.");
 
         var duration = moveDuration ?? TimeSpan.FromSeconds(0.5);
+        Phase = BattlePhase.Intro;
 
         startingPositions.Clear();
         foreach (var combatant in All)
@@ -70,15 +98,14 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         var targets = PlayerTeam.Select((_, i) => Anchor + PlayerTeamPositions[i])
             .Concat(Enemies.Select((_, i) => Anchor + EnemiesPositions[i]))
             .ToList();
-        Centre = targets.Count == 0 ? Anchor : targets.Aggregate(Vector2.Zero, (sum, t) => sum + t) / targets.Count;
+        Centre = targets.Count == 0
+            ? Anchor
+            : (targets.Aggregate(Vector2.Min) + targets.Aggregate(Vector2.Max)) / 2f;
         Core.Camera.Bounds = Core.GraphicsDevice.Viewport.Bounds;
         Core.Camera.MoveTo(new FollowTarget(() => Centre, () => Core.Camera.Position, p => Core.Camera.Position = p));
 
-        MoveIntoPlace(PlayerTeam, PlayerTeamPositions, duration);
-        MoveIntoPlace(Enemies, EnemiesPositions, duration);
+        MoveIntoPlace(duration);
 
-        foreach (var character in PlayerTeam.OfType<Character>()) character.SetFacing(Direction.East);
-        foreach (var character in Enemies.OfType<Character>()) character.SetFacing(Direction.West);
 
         if (MainGame.Sounds.TryGetValue(BattleMusic, out var track)) Battle.BattleMusic.Instance.Start(track);
         BattleBackground.Instance.Show();
@@ -86,11 +113,19 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         Current = this;
 
         foreach (var combatant in All) combatant.OnBattleStart(this);
+
     }
 
-
-    private void MoveIntoPlace(IBattleStats[] team, Vector2[] offsets, TimeSpan duration)
+    private void MoveIntoPlace(TimeSpan duration)
     {
+        MoveIntoPlace(PlayerTeam, PlayerTeamPositions, duration, Direction.East);
+        MoveIntoPlace(Enemies, EnemiesPositions, duration, Direction.West);
+    }
+
+    private void MoveIntoPlace(IBattleStats[] team, Vector2[] offsets, TimeSpan duration, Direction facing)
+    {
+        foreach (var character in team.OfType<Character>()) character.SetFacing(facing);
+
         for (int i = 0; i < team.Length; i++)
         {
             var target = Anchor + offsets[i];
@@ -105,6 +140,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
     public void End(TimeSpan? returnDuration = null)
     {
         var duration = returnDuration ?? TimeSpan.FromSeconds(0.5);
+        Phase = BattlePhase.Outro;
 
         foreach (var (combatant, position) in startingPositions)
         {
@@ -124,9 +160,13 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         BattleBackground.Instance.Hide();
 
         foreach (var combatant in All) combatant.OnBattleEnd(this);
-        foreach (var bullet in Core.Entities.Entities.OfType<Bullet>().ToList()) bullet.Remove();
-
+        KillBullets();
         if (Current == this) Current = null;
+    }
+
+    private void KillBullets()
+    {
+        foreach (var bullet in Core.Entities.Entities.OfType<Bullet>().ToList()) bullet.Remove();
     }
 
     public Vector2? StartingPosition(IBattleStats combatant) =>
@@ -138,14 +178,62 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         {
             e.DrawHealthBar(batch);
         }
+
+
     }
 
+    public void DrawScreen(SpriteBatch batch)
+    {
+        BattleUI.Instance.Draw(batch);
+    }
     public void Update(GameTime deltaTime)
     {
-        if (All.Any(b => b.Health <= 0))
+        bool playersDown = PlayerTeam.All(c => c.Health <= 0);
+        bool enemiesDown = Enemies.All(c => c.Health <= 0);
+
+        if (playersDown || enemiesDown)
         {
+            Outcome = enemiesDown ? BattleOutcome.Won : BattleOutcome.Lost;
             End();
             return;
         }
+
+        if (!TextBox.InDialogue) phaseElapsed += deltaTime.ElapsedGameTime;
+        if (Phase.Duration() is { } limit && phaseElapsed >= limit) Advance();
+
+        BattleUI.Instance.Update(deltaTime);
     }
+}
+
+public enum BattleOutcome
+{
+    Won, Lost
+}
+
+public enum BattlePhase
+{
+    Intro,
+    Menu,
+    PlayerAction,
+    EnemyAttack,
+    Outro
+}
+public static class BattlePhaseExtensions
+{
+    public static TimeSpan? Duration(this BattlePhase phase) => phase switch
+    {
+        BattlePhase.Intro => TimeSpan.FromSeconds(0.5),
+        BattlePhase.PlayerAction => TimeSpan.FromSeconds(2),
+        BattlePhase.EnemyAttack => TimeSpan.FromSeconds(10),
+        _ => null,
+    };
+
+    public static BattlePhase Next(this BattlePhase phase) => phase switch
+    {
+        BattlePhase.Intro => BattlePhase.Menu,
+        BattlePhase.Menu => BattlePhase.PlayerAction,
+        BattlePhase.PlayerAction => BattlePhase.EnemyAttack,
+        BattlePhase.EnemyAttack => BattlePhase.Menu,
+        _ => phase,
+    };
 }

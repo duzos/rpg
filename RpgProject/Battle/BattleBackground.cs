@@ -1,11 +1,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SummitKit;
+using SummitKit.Physics;
 using System;
 
 namespace RpgProject.Battle;
 
-public sealed class BattleBackground
+public sealed class BattleBackground : IUpdating
 {
     public static BattleBackground Instance { get; } = new();
 

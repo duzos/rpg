@@ -25,6 +25,8 @@
 		<Region name="banana-5" x="130" y="117" width="26" height="27"></Region>
 		<Region name="banana-6" x="156" y="117" width="26" height="27"></Region>
 		<Region name="banana-7" x="182" y="117" width="26" height="27"></Region>
+		<Region name="fight" x="0" y="144" width="31" height="26"></Region>
+		<Region name="spare" x="31" y="144" width="31" height="26"></Region>
 	</Regions>
 	<Animations>
 		
