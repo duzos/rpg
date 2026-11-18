@@ -33,7 +33,7 @@ public interface IBattleStats {
 
         var font = Core.ConsoleFont;
         if (font is null) return;
-        batch.DrawString(font, $"{Health}/{MaxHealth}", new Vector2(left, top + height + pad + 1), Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+        batch.DrawString(font, $"{Health}/{MaxHealth}", new Vector2(left, top + height + pad + 1), Color.White, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
     }
 
     void DrawHealthBar(SpriteBatch batch, Color? colour = null, Color? bgColour = null, float offset = 10f)
