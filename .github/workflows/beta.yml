@@ -14,8 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  beta:
+  build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        rid: [win-x64, linux-x64, osx-arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,12 +30,36 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Publish self-contained Windows build
-        run: dotnet publish ./RpgProject/RpgProject.csproj -c Release -r win-x64 --self-contained true -o publish
+      - name: Publish self-contained build
+        run: dotnet publish ./RpgProject/RpgProject.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish
 
-      - name: Zip build
-        shell: pwsh
-        run: Compress-Archive -Path publish\* -DestinationPath rpg-beta.zip
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: publish
+          retention-days: 1
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download builds
+        uses: actions/download-artifact@v4
+        with:
+          path: builds
+
+      - name: Package builds
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd builds/win-x64 && zip -qr ../../rpg-beta-windows-x64.zip .)
+          chmod +x builds/linux-x64/RpgProject builds/osx-arm64/RpgProject
+          tar -czf rpg-beta-linux-x64.tar.gz -C builds/linux-x64 .
+          tar -czf rpg-beta-macos-arm64.tar.gz -C builds/osx-arm64 .
 
       - name: Update rolling beta release
         shell: bash
@@ -42,12 +69,16 @@ jobs:
         run: |
           set -euo pipefail
           subject=$(git log -1 --format=%s)
+          notes=$(printf '%s\n\n%s\n\n%s' \
+            "Automated beta build of ${GITHUB_SHA::7}: $subject" \
+            'Linux: extract, then run `./RpgProject`.' \
+            'macOS (Apple Silicon): the build is unsigned. Extract it, run `xattr -dr com.apple.quarantine <folder>` once, then run `./RpgProject` from Terminal.')
           gh release delete beta --cleanup-tag --yes || true
-          gh release create beta rpg-beta.zip \
+          gh release create beta rpg-beta-windows-x64.zip rpg-beta-linux-x64.tar.gz rpg-beta-macos-arm64.tar.gz \
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Beta #$RUN_NUMBER" \
-            --notes "Automated beta build of ${GITHUB_SHA::7}: $subject"
+            --notes "$notes"
 
       - name: Post to Discord
         shell: bash
@@ -60,8 +91,9 @@ jobs:
           set -euo pipefail
           subject=$(git log -1 --format=%s)
           commit_url="$SERVER/$REPO/commit/$GITHUB_SHA"
-          download="$SERVER/$REPO/releases/download/beta/rpg-beta.zip"
-          size=$(du -m rpg-beta.zip | cut -f1)
+          base="$SERVER/$REPO/releases/download/beta"
+          release_url="$SERVER/$REPO/releases/tag/beta"
+          size() { du -m "$1" | cut -f1; }
           payload=$(jq -nc \
             --arg u "${REPO#*/} beta builds" \
             --arg a "https://github.com/${REPO%%/*}.png" \
@@ -69,7 +101,12 @@ jobs:
             --arg run "$RUN_NUMBER" \
             --arg m "$subject" \
             --arg url "$commit_url" \
-            --arg dl "$download" \
-            --arg size "$size" \
-            '{username: $u, avatar_url: $a, content: ("<:new1:1253371736510959636><:new2:1253371805734015006> New `\($repo)` beta build `#\($run)`:\n> :sparkles: [\($m)](<\($url)>)\n> :inbox_tray: [Download for Windows x64 (\($size) MB)](<\($dl)>)")}')
+            --arg win "$base/rpg-beta-windows-x64.zip" \
+            --arg linux "$base/rpg-beta-linux-x64.tar.gz" \
+            --arg mac "$base/rpg-beta-macos-arm64.tar.gz" \
+            --arg rel "$release_url" \
+            --arg ws "$(size rpg-beta-windows-x64.zip)" \
+            --arg ls "$(size rpg-beta-linux-x64.tar.gz)" \
+            --arg ms "$(size rpg-beta-macos-arm64.tar.gz)" \
+            '{username: $u, avatar_url: $a, content: ("<:new1:1253371736510959636><:new2:1253371805734015006> New `\($repo)` beta build `#\($run)`:\n> :sparkles: [\($m)](<\($url)>)\n> :inbox_tray: [Windows x64 (\($ws) MB)](<\($win)>) · [Linux x64 (\($ls) MB)](<\($linux)>) · [macOS Apple Silicon (\($ms) MB)](<\($mac)>)\n> -# Mac builds are unsigned, see the [release notes](<\($rel)>) to open them.")}')
           curl -sS --fail-with-body -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "$payload"
