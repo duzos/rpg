@@ -41,6 +41,7 @@ namespace RpgProject
             base.Initialize();
 
             Console.Commands.Register(new RoomCommand());
+            Console.Commands.Register(new StatsCommand());
 
             Entities.LockToScreenBounds = false;
             Entities.DrawOrder = (a, b) => a.AABB.Bottom.CompareTo(b.AABB.Bottom);
@@ -123,7 +124,7 @@ namespace RpgProject
 
             RoomManager.Instance.DrawScreen(batch);
             TextBox.Current?.DrawScreen(batch);
-        }
             BattleState.Current?.DrawScreen(batch);
+        }
     }
 }
