@@ -31,6 +31,7 @@ public class Character : Entity, IBattleStats
     }
 
     public Direction Facing => lastFacingDirection;
+    public Color HealthBarColour { get; set; } = Color.Lime;
 
     private static bool Blocked(Rectangle feet, List<Rectangle> solids)
     {

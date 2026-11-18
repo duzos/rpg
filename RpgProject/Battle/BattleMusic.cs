@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Media;
+using SummitKit;
 using System;
 
 namespace RpgProject.Battle;
@@ -16,12 +17,10 @@ public sealed class BattleMusic
     private float _battleTarget;
     private float _overworldLevel = 1f;
     private float _overworldTarget = 1f;
-    private float _overworldVolume = 1f;
     private bool _active;
 
     public void Start(SoundEffect track)
     {
-        if (!_active) _overworldVolume = MediaPlayer.Volume;
         _active = true;
 
         if (_battle is null || _battle.IsDisposed)
@@ -54,7 +53,7 @@ public sealed class BattleMusic
         if (_battle is not null)
         {
             _battleLevel = MoveTowards(_battleLevel, _battleTarget, step);
-            _battle.Volume = _battleLevel;
+            _battle.Volume = Math.Clamp(_battleLevel * Core.Audio.MusicVolume, 0f, 1f);
 
             if (_battleLevel <= 0f && _battleTarget <= 0f)
             {
@@ -67,7 +66,7 @@ public sealed class BattleMusic
         if (_overworldLevel != _overworldTarget)
         {
             _overworldLevel = MoveTowards(_overworldLevel, _overworldTarget, step);
-            MediaPlayer.Volume = _overworldVolume * _overworldLevel;
+            Core.Audio.MusicLevel = _overworldLevel;
 
             if (_overworldLevel <= 0f && _active && MediaPlayer.State == MediaState.Playing)
                 MediaPlayer.Pause();

@@ -49,6 +49,7 @@ namespace RpgProject
             Camera.Follow(Player);
             Camera.Zoom = 4F;
             Camera.MinZoomStep = 0.05F;
+            Audio.MusicVolume = 0.15F;
 
             RoomManager.Instance.Travel("square", "default");
         }
@@ -112,6 +113,7 @@ namespace RpgProject
             base.DrawWorld(batch);
             RoomManager.Instance.Draw(batch);
             BattleBackground.Instance.Draw(batch, Camera.VisibleArea);
+            BattleState.Current?.Draw(batch);
         }
 
         protected override void DrawScreen(SpriteBatch batch)

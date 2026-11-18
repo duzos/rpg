@@ -7,25 +7,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
+using SummitKit.Util;
 
 namespace RpgProject.Battle;
 
-public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies) {
+public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "rudebuster_boss") {
     public static BattleState? Current = null;
     public static bool InBattle => Current != null;
 
     public static readonly Vector2[] PlayerTeamPositions =
     [
-        new(-70, -28),
-        new(-84, 0),
-        new(-70, 28),
+        new(-100, -28),
+        new(-100, 0),
+        new(-100, 28),
     ];
 
     public static readonly Vector2[] EnemiesPositions =
     [
-        new(70, -28),
-        new(84, 0),
-        new(70, 28),
+        new(100, -28),
+        new(100, 0),
+        new(100, 28),
     ];
 
     public IBattleStats[] PlayerTeam { get; private set; } = Fill(playerTeam, PlayerTeamPositions.Length, "player team");
@@ -38,7 +39,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
 
     private readonly Dictionary<IBattleStats, Vector2> startingPositions = [];
 
-    public static string BattleMusic { get; set; } = "rudebuster_boss";
+    public string BattleMusic { get; set; } = musicId;
 
     private static IBattleStats[] Fill(IEnumerable<IBattleStats> team, int slots, string label)
     {
@@ -70,6 +71,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
             .Concat(Enemies.Select((_, i) => Anchor + EnemiesPositions[i]))
             .ToList();
         Centre = targets.Count == 0 ? Anchor : targets.Aggregate(Vector2.Zero, (sum, t) => sum + t) / targets.Count;
+        Core.Camera.Bounds = Core.GraphicsDevice.Viewport.Bounds;
         Core.Camera.MoveTo(new FollowTarget(() => Centre, () => Core.Camera.Position, p => Core.Camera.Position = p));
 
         MoveIntoPlace(PlayerTeam, PlayerTeamPositions, duration);
@@ -113,7 +115,11 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         }
 
         startingPositions.Clear();
-        Core.Camera.Follow(MainGame.Player);
+
+        Core.Camera.Bounds = RoomManager.Instance.CurrentRoom.Tilemap.Bounds;
+        Scheduler.Delay(() => {
+            Core.Camera.Follow(MainGame.Player);
+        }, duration);
         Battle.BattleMusic.Instance.End();
         BattleBackground.Instance.Hide();
 
@@ -125,8 +131,11 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
     public Vector2? StartingPosition(IBattleStats combatant) =>
         startingPositions.TryGetValue(combatant, out var position) ? position : null;
 
-    public void DrawScreen(SpriteBatch batch)
+    public void Draw(SpriteBatch batch)
     {
-
+        foreach (var e in All)
+        {
+            e.DrawHealthBar(batch);
+        }
     }
 }

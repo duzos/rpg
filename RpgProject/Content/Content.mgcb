@@ -72,3 +72,9 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:assets/sfx/rudebuster_boss.ogg
+
+#begin assets/sfx/black_knife.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:assets/sfx/black_knife.ogg
