@@ -164,7 +164,7 @@ public class Character : Entity, IBattleStats
     private Sprite UpdateSprite()
     {
         string keyword = GetDirectionKeyword(lastFacingDirection);
-        bool idle = inputs.All(v => v == false);
+        bool idle = !inputs.Take(4).Any(v => v);
         string lookup = $"char-{keyword}-{(idle ? "idle" : "walk")}"; 
         Sprite val = sprites.GetValueOrDefault(lookup, null);
         if (val is not null) return val;
