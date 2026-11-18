@@ -21,7 +21,7 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
         if (BattleState.Current is not null)
         {
             BattleState.Current.End();
-            TextBox.Queue("gg");
+            TextBox.Queue("gg", talkSprites: [Sprite], talkSounds: [MainGame.Sounds["snd_text"]]);
             return;
         }
 
@@ -30,6 +30,6 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
 
         var battle = new BattleState([player], [this], "black_knife");
         battle.Start();
-        TextBox.Queue("potassium.");
+        TextBox.Queue("potassium.\nlet's do this.", talkSprites: [Sprite], talkSounds: [MainGame.Sounds["snd_text"]]);
     }
 }

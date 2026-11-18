@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace RpgProject.Dialogue;
 
-public sealed class TextBox(string content, string region = "textbox")
+public sealed class TextBox(string content, string region = "textbox", Sprite? talkSprite = null, SoundEffect? talkSfx = null)
 {
     private static readonly Dictionary<string, Sprite[]> BoxSpriteLookup = new Dictionary<string, Sprite[]>();
     public static readonly Queue<TextBox> Upcoming = new();
@@ -29,6 +29,8 @@ public sealed class TextBox(string content, string region = "textbox")
     private readonly string regionId = region;
     public Sprite[] Sprites => GetTextBoxSprite(regionId);
     public SpriteFont Font { get; private set; } = Core.ConsoleFont;
+    public Sprite? TalkSprite { get; private set; } = talkSprite;
+    public SoundEffect? TalkSound { get; private set; } = talkSfx;
 
     public int Scale { get; set; } = 3;
     public int Margin { get; set; } = 24;
@@ -55,13 +57,17 @@ public sealed class TextBox(string content, string region = "textbox")
 
         DrawFrame(batch, sprites, bounds, cornerWidth, cornerHeight);
 
-        if (Font is null || string.IsNullOrEmpty(Content)) return;
-
-        var textArea = new Rectangle(
+        var inner = new Rectangle(
             bounds.X + cornerWidth + Padding,
             bounds.Y + cornerHeight + Padding,
             bounds.Width - (cornerWidth + Padding) * 2,
             bounds.Height - (cornerHeight + Padding) * 2);
+
+        int portraitWidth = TalkSprite is null ? 0 : DrawPortrait(batch, TalkSprite, inner) + PortraitGap;
+
+        if (Font is null || string.IsNullOrEmpty(Content)) return;
+
+        var textArea = new Rectangle(inner.X + portraitWidth, inner.Y, inner.Width - portraitWidth, inner.Height);
 
         float lineHeight = Font.LineSpacing * TextScale;
         float y = textArea.Y;
@@ -74,6 +80,21 @@ public sealed class TextBox(string content, string region = "textbox")
             remaining -= line.Length + 1;
             y += lineHeight;
         }
+    }
+
+    public int PortraitGap { get; set; } = 12;
+
+    private static int DrawPortrait(SpriteBatch batch, Sprite sprite, Rectangle inner)
+    {
+        int side = inner.Height;
+        var region = sprite.Region;
+        int scale = Math.Max(1, side / Math.Max(region.Width, region.Height));
+        var size = new Vector2(region.Width, region.Height) * scale;
+        var square = new Rectangle(inner.X, inner.Y, side, side);
+        var position = square.Center.ToVector2() - size / 2f;
+        position = new Vector2(MathF.Floor(position.X), MathF.Floor(position.Y));
+        region.Draw(batch, position, sprite.Colour, 0f, Vector2.Zero, scale, sprite.Effects, 0f);
+        return side;
     }
 
     public float CharactersPerSecond { get; set; } = 20f;
@@ -97,12 +118,19 @@ public sealed class TextBox(string content, string region = "textbox")
         else Upcoming.Enqueue(box);
     }
 
-    public static void Queue(string list, string region="textbox")
+    public static void Queue(string list, string region="textbox", Sprite[]? talkSprites = null, SoundEffect[]? talkSounds = null)
     {
         string[] lines = list.Split("\n");
+        talkSprites ??= [];
+        talkSounds ??= [];
+        int i = 0;
         foreach (string line in lines)
         {
-            Queue(new(line, region));
+            Sprite? sprite = talkSprites.Length == 0 ? null : talkSprites[Math.Min(i, talkSprites.Length - 1)].Clone();
+            SoundEffect? sound = talkSounds.Length == 0 ? null : talkSounds[Math.Min(i, talkSounds.Length - 1)];
+
+            Queue(new(line, region, sprite, sound));
+            i++;
         }
     }
 
@@ -151,7 +179,18 @@ public sealed class TextBox(string content, string region = "textbox")
             return;
         }
 
+        TalkSprite?.Update(time);
+
+        int before = VisibleCharacters;
         _typed += (float)time.ElapsedGameTime.TotalSeconds * CharactersPerSecond;
+        if (VisibleCharacters > before) OnCharacterTyped();
+    }
+
+    private void OnCharacterTyped()
+    {
+        if (TalkSound is null) return;
+        if (!char.IsLetterOrDigit(Content[VisibleCharacters - 1])) return;
+        Core.Audio.PlaySound(TalkSound);
     }
 
     private static void DrawFrame(SpriteBatch batch, Sprite[] sprites, Rectangle bounds, int cornerWidth, int cornerHeight)

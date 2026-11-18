@@ -78,3 +78,9 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:assets/sfx/black_knife.ogg
+
+#begin assets/sfx/snd_text.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:assets/sfx/snd_text.wav
