@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using RpgProject.Audio;
 using RpgProject.Dialogue;
 using RpgProject.Player;
 using RpgProject.World;
@@ -73,6 +74,9 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
             case BattlePhase.Menu:
                 KillBullets();
                 MoveIntoPlace(BattlePhase.Intro.Duration() ?? TimeSpan.Zero);
+                break;
+            case BattlePhase.EnemyAttack:
+                StartEnemyActions();
                 break;
         }
     }
@@ -164,6 +168,41 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         if (Current == this) Current = null;
     }
 
+    public TimeSpan FallbackAttackLength { get; set; } = TimeSpan.FromSeconds(10);
+    public int AttackStagger { get; set; } = 1;
+
+    private BPMSong? attackSong;
+    private double? attackEndBeat;
+
+    private void StartEnemyActions()
+    {
+        attackSong = null;
+        attackEndBeat = null;
+        if (!BPMSong.Lookup.TryGetValue(BattleMusic, out var song) || !song.IsPlaying) return;
+
+        double start = song.NextBarStart();
+        double end = start + song.BeatsPerBar;
+        int order = 0;
+
+        foreach (var enemy in Enemies)
+        {
+            if (enemy.Health <= 0 || enemy is not Entity entity) continue;
+            if (enemy.ChooseAction(this) is not { } action) continue;
+
+            double enemyStart = start + order * AttackStagger;
+            action.Schedule(new ActionContext(this, song, entity), enemyStart);
+            end = Math.Max(end, enemyStart + action.Beats);
+            order++;
+        }
+
+        attackSong = song;
+        attackEndBeat = end;
+    }
+
+    private bool EnemyAttackFinished() => attackSong is { } song && attackEndBeat is { } end
+        ? song.Beats >= end
+        : phaseElapsed >= FallbackAttackLength;
+
     private void KillBullets()
     {
         foreach (var bullet in Core.Entities.Entities.OfType<Bullet>().ToList()) bullet.Remove();
@@ -200,6 +239,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
 
         if (!TextBox.InDialogue) phaseElapsed += deltaTime.ElapsedGameTime;
         if (Phase.Duration() is { } limit && phaseElapsed >= limit) Advance();
+        else if (Phase == BattlePhase.EnemyAttack && EnemyAttackFinished()) Advance();
 
         BattleUI.Instance.Update(deltaTime);
     }
@@ -224,7 +264,6 @@ public static class BattlePhaseExtensions
     {
         BattlePhase.Intro => TimeSpan.FromSeconds(0.5),
         BattlePhase.PlayerAction => TimeSpan.FromSeconds(2),
-        BattlePhase.EnemyAttack => TimeSpan.FromSeconds(10),
         _ => null,
     };
 

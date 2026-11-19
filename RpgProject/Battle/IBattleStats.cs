@@ -19,6 +19,7 @@ public interface IBattleStats {
     Color HealthBarColour { get; protected set; }
     void OnBattleStart(BattleState state) { }
     void OnBattleEnd(BattleState state) { }
+    EnemyAction? ChooseAction(BattleState state) => null;
 
     void DrawHealthBar(SpriteBatch batch, Color colour, Color bgColour, float offset, float x, float y, float height, float width, float padding = 0f)
     {

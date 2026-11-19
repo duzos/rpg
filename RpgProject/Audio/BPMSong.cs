@@ -123,7 +123,15 @@ public sealed class BPMSong(string id, double bpm)
 
     public double Beats => (Position - Offset) / BeatLength;
     public int CurrentBeat => (int)Math.Floor(Beats);
-    public int BeatInBar => (((CurrentBeat + DownbeatOffset) % BeatsPerBar) + BeatsPerBar) % BeatsPerBar;
+    public int BeatInBar => BeatInBarOf(CurrentBeat);
+    public int BeatInBarOf(int beat) => (((beat + DownbeatOffset) % BeatsPerBar) + BeatsPerBar) % BeatsPerBar;
+
+    public int NextBarStart()
+    {
+        int beat = CurrentBeat + 1;
+        while (BeatInBarOf(beat) != 0) beat++;
+        return beat;
+    }
     public bool IsDownbeat => BeatInBar == 0;
     public double BeatProgress => Beats - Math.Floor(Beats);
     public TimeSpan TimeToNextBeat => BeatLength * (1 - BeatProgress);

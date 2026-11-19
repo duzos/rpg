@@ -50,42 +50,27 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
         var battle = new BattleState([player], [this, nana2, nana3]);
         battle.Start();
         TextBox.Queue([("potassium.", Sprite, MainGame.Sounds["snd_text"]), "let's do this."]);
-
-
-        if (!BPMSong.Lookup.TryGetValue(battle.BattleMusic, out var song)) return;
-
-        void OnBeat(int beat)
-        {
-            if (BattleState.Current != battle)
-            {
-                song.Beat -= OnBeat;
-                return;
-            }
-
-            if (battle.Phase != BattlePhase.EnemyAttack || song.BeatInBar != BattleBackground.Instance.AccentBeat) return;
-
-            var nanas = battle.Enemies.OfType<Banana>().Where(b => b.Health > 0).ToArray();
-            if (nanas.Length == 0) return;
-            var shooter = nanas[Random.Shared.Next(nanas.Length)];
-
-            shooter.Fire(Random.Shared.Next(2) == 0);
-            BattleBackground.Instance.QueueRing(() => shooter.AABB.Center.ToVector2(), Color.Red, 0.5F);
-
-        }
-
-        song.Beat += OnBeat;
     }
 
-    private void Fire(bool lob)
+    public EnemyAction? ChooseAction(BattleState state) => Random.Shared.Next(3) switch
     {
-        if (!BPMSong.Lookup.TryGetValue(BattleState.Current.BattleMusic, out var song)) return;
-        var landsAt = song.TimeOfBeat(song.CurrentBeat + 8);
+        0 => Volley(),
+        1 => Lob(),
+        _ => Volley().Then(Lob()),
+    };
 
-        Bullet bullet = lob
-            ? new ArcBullet(Sprite.Clone()) { Attack = 10, Target = Character.PlayerFeetCentre, Duration = landsAt - song.Position }
-            : new AimedBullet(Sprite.Clone()) { Attack = 5 };
-        bullet.Spawn(AABB.Center.ToVector2());
-    }
+    private EnemyAction Volley() => new EnemyAction(8)
+        .At(0, c => c.RingNow(Color.Red))
+        .Every(1, 2, 4, c => c.Fire(new AimedBullet(Sprite.Clone()) { Attack = 2 }));
+
+    private EnemyAction Lob() => new EnemyAction(8)
+        .At(0, c => c.RingNow(Color.Red))
+        .At(1, c => c.Fire(new ArcBullet(Sprite.Clone())
+        {
+            Attack = 5,
+            Target = Character.PlayerFeetCentre,
+            Duration = c.UntilBeatsFromNow(4),
+        }));
 
     public void OnBattleEnd(BattleState state)
     {

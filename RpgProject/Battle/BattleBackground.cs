@@ -93,6 +93,12 @@ public sealed class BattleBackground : IUpdating
     public void QueueRing(Func<Vector2> centre, Color colour, float brightness = 1f) =>
         _queued.Add((centre, colour, brightness));
 
+    public void SpawnRing(Vector2 centre, Color colour, float brightness = 1f, bool accent = false)
+    {
+        float beatLength = BPMSong.Current is { } song ? (float)song.BeatLength.TotalSeconds : 0.5f;
+        _rings.Add(new Ring(0f, accent ? RingKind.Accent : RingKind.Beat, centre, beatLength, colour, brightness));
+    }
+
     private void SpawnOnBeat()
     {
         BPMSong? song = BPMSong.Current;
