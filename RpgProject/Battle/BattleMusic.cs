@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Media;
 using SummitKit;
 using System;
@@ -11,68 +10,70 @@ public sealed class BattleMusic
     public static BattleMusic Instance { get; } = new();
 
     public TimeSpan FadeDuration { get; set; } = TimeSpan.FromSeconds(0.5);
+    public bool Active { get; private set; }
 
-    private SoundEffectInstance? _battle;
-    private float _battleLevel;
-    private float _battleTarget;
-    private float _overworldLevel = 1f;
-    private float _overworldTarget = 1f;
-    private bool _active;
+    private Song? _overworld;
+    private TimeSpan _overworldPosition;
+    private bool _overworldRepeating;
 
-    public void Start(SoundEffect track)
+    private float _level = 1f;
+    private float _target = 1f;
+    private Action? _onSilent;
+
+    public void Start(Song track)
     {
-        _active = true;
+        if (Active) return;
+        Active = true;
 
-        if (_battle is null || _battle.IsDisposed)
+        FadeOutThen(() =>
         {
-            _battle = track.CreateInstance();
-            _battle.IsLooped = true;
-            _battle.Volume = 0f;
-            _battle.Play();
-            _battleLevel = 0f;
-        }
+            _overworld = MediaPlayer.Queue.ActiveSong;
+            _overworldPosition = MediaPlayer.PlayPosition;
+            _overworldRepeating = MediaPlayer.IsRepeating;
 
-        _battleTarget = 1f;
-        _overworldTarget = 0f;
+            Core.Audio.PlayMusic(track, true);
+            _target = 1f;
+        });
     }
 
     public void End()
     {
-        if (!_active) return;
-        _active = false;
+        if (!Active) return;
+        Active = false;
 
-        _battleTarget = 0f;
-        _overworldTarget = 1f;
-        if (MediaPlayer.State == MediaState.Paused) MediaPlayer.Resume();
+        FadeOutThen(() =>
+        {
+            MediaPlayer.Stop();
+            if (_overworld is not null)
+            {
+                MediaPlayer.Play(_overworld, _overworldPosition);
+                MediaPlayer.IsRepeating = _overworldRepeating;
+            }
+
+            _overworld = null;
+            _target = 1f;
+        });
+    }
+
+    private void FadeOutThen(Action onSilent)
+    {
+        _onSilent = onSilent;
+        _target = 0f;
     }
 
     public void Update(GameTime time)
     {
+        if (_level == _target && _onSilent is null) return;
+
         float step = FadeDuration.TotalSeconds <= 0 ? 1f : (float)(time.ElapsedGameTime.TotalSeconds / FadeDuration.TotalSeconds);
+        _level = _level < _target ? Math.Min(_target, _level + step) : Math.Max(_target, _level - step);
+        Core.Audio.MusicLevel = _level;
 
-        if (_battle is not null)
+        if (_level <= 0f && _onSilent is not null)
         {
-            _battleLevel = MoveTowards(_battleLevel, _battleTarget, step);
-            _battle.Volume = Math.Clamp(_battleLevel * Core.Audio.MusicVolume, 0f, 1f);
-
-            if (_battleLevel <= 0f && _battleTarget <= 0f)
-            {
-                _battle.Stop();
-                _battle.Dispose();
-                _battle = null;
-            }
-        }
-
-        if (_overworldLevel != _overworldTarget)
-        {
-            _overworldLevel = MoveTowards(_overworldLevel, _overworldTarget, step);
-            Core.Audio.MusicLevel = _overworldLevel;
-
-            if (_overworldLevel <= 0f && _active && MediaPlayer.State == MediaState.Playing)
-                MediaPlayer.Pause();
+            var action = _onSilent;
+            _onSilent = null;
+            action();
         }
     }
-
-    private static float MoveTowards(float value, float target, float step) =>
-        value < target ? Math.Min(target, value + step) : Math.Max(target, value - step);
 }

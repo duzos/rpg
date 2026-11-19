@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace RpgProject.Battle;
 
-public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "rudebuster_boss") : IUpdating {
+public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerable<IBattleStats> enemies, string musicId = "tv_world") : IUpdating {
     public static BattleState? Current = null;
     public static bool InBattle => Current != null;
 
@@ -107,7 +107,7 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
         MoveIntoPlace(duration);
 
 
-        if (MainGame.Sounds.TryGetValue(BattleMusic, out var track)) Battle.BattleMusic.Instance.Start(track);
+        if (MainGame.Music.TryGetValue(BattleMusic, out var track)) Battle.BattleMusic.Instance.Start(track);
         BattleBackground.Instance.Show();
 
         Current = this;
