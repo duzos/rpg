@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
+using RpgProject.Audio;
 using RpgProject.Battle;
 using RpgProject.Dialogue;
 using RpgProject.Player;
@@ -7,8 +9,10 @@ using SummitKit;
 using SummitKit.Graphics;
 using SummitKit.Util;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static SummitKit.Util.Scheduler;
 
 namespace RpgProject.Npcs;
 
@@ -43,39 +47,42 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
         nana2.Add();
         nana3.Add();
 
-        var battle = new BattleState([player], [this, nana2, nana3], "black_knife");
+        var battle = new BattleState([player], [this, nana2, nana3]);
         battle.Start();
         TextBox.Queue([("potassium.", Sprite, MainGame.Sounds["snd_text"]), "let's do this."]);
 
 
-        Scheduler.Repeat((task) => {
+        if (!BPMSong.Lookup.TryGetValue(battle.BattleMusic, out var song)) return;
+
+        void OnBeat(int beat)
+        {
             if (BattleState.Current != battle)
             {
-                task.Cancelled = true;
+                song.Beat -= OnBeat;
                 return;
             }
 
-            if (BattleState.Current.Phase != BattlePhase.EnemyAttack) return;
+            if (battle.Phase != BattlePhase.EnemyAttack || song.BeatInBar != BattleBackground.Instance.AccentBeat) return;
 
-            var shooters = battle.Enemies.OfType<Banana>().Where(b => b.Health > 0).ToList();
-            for (int i = 0; i < shooters.Count; i++)
-            {
-                var shooter = shooters[i];
-                bool throwLob = Random.Shared.Next(2) == 0;
-                Scheduler.Delay(() =>
-                {
-                    if (BattleState.Current != battle || battle.Phase != BattlePhase.EnemyAttack) return;
-                    shooter.Fire(throwLob);
-                }, TimeSpan.FromSeconds(0.3 * i));
-            }
+            var nanas = battle.Enemies.OfType<Banana>().Where(b => b.Health > 0).ToArray();
+            if (nanas.Length == 0) return;
+            var shooter = nanas[Random.Shared.Next(nanas.Length)];
 
-        }, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2.5F));
+            shooter.Fire(Random.Shared.Next(2) == 0);
+            BattleBackground.Instance.QueueRing(() => shooter.AABB.Center.ToVector2(), Color.Red, 0.5F);
+
+        }
+
+        song.Beat += OnBeat;
     }
 
     private void Fire(bool lob)
     {
+        if (!BPMSong.Lookup.TryGetValue(BattleState.Current.BattleMusic, out var song)) return;
+        var landsAt = song.TimeOfBeat(song.CurrentBeat + 8);
+
         Bullet bullet = lob
-            ? new ArcBullet(Sprite.Clone()) { Attack = 10, Target = Character.PlayerFeetCentre }
+            ? new ArcBullet(Sprite.Clone()) { Attack = 10, Target = Character.PlayerFeetCentre, Duration = landsAt - song.Position }
             : new AimedBullet(Sprite.Clone()) { Attack = 5 };
         bullet.Spawn(AABB.Center.ToVector2());
     }
