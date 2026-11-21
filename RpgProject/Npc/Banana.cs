@@ -22,6 +22,8 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
     public int MaxHealth { get; set; } = 5;
     public int Attack { get; set; } = 1;
     public Color HealthBarColour { get; set; } = Color.Yellow;
+    public float MaxInvincibility { get; } = 0f;
+    public float Invincibility { get; set; }
 
     private Banana? Parent;
     public Banana Clone() => new(Sprite.Clone())
@@ -60,11 +62,11 @@ public sealed class Banana(Sprite sprite) : Npc(sprite), IBattleStats
     };
 
     private EnemyAction Volley() => new EnemyAction(8)
-        .At(0, c => c.RingNow(Color.Red))
+        .At(0, c => c.RingNow(new Color(230, 0, 38)))
         .Every(1, 2, 4, c => c.Fire(new AimedBullet(Sprite.Clone()) { Attack = 2 }));
 
     private EnemyAction Lob() => new EnemyAction(8)
-        .At(0, c => c.RingNow(Color.Red))
+        .At(0, c => c.RingNow(new Color(230, 0, 38)))
         .At(1, c => c.Fire(new ArcBullet(Sprite.Clone())
         {
             Attack = 5,

@@ -27,6 +27,41 @@
 		<Region name="banana-7" x="182" y="117" width="26" height="27"></Region>
 		<Region name="fight" x="0" y="144" width="31" height="26"></Region>
 		<Region name="spare" x="31" y="144" width="31" height="26"></Region>
+		<Region name="char-battle-idle-0" x="0" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-idle-1" x="36" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-idle-2" x="72" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-idle-3" x="108" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-idle-4" x="144" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-idle-5" x="180" y="172" width="36" height="38"></Region>
+		<Region name="char-battle-attack-0" x="0" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-1" x="63" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-2" x="126" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-3" x="189" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-4" x="252" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-5" x="315" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-6" x="378" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-attack-7" x="441" y="210" width="63" height="50"></Region>
+		<Region name="char-battle-end-0" x="0" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-1" x="34" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-2" x="68" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-3" x="102" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-4" x="136" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-5" x="170" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-6" x="204" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-7" x="238" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-end-8" x="272" y="260" width="34" height="37"></Region>
+		<Region name="char-battle-forward-idle" x="0" y="297" width="19" height="38"></Region>
+		<Region name="char-battle-forward-walk-1" x="19" y="297" width="19" height="38"></Region>
+		<Region name="char-battle-forward-walk-2" x="57" y="297" width="19" height="38"></Region>
+		<Region name="char-battle-left-idle" x="0" y="335" width="19" height="38"></Region>
+		<Region name="char-battle-left-walk-1" x="19" y="335" width="19" height="38"></Region>
+		<Region name="char-battle-left-walk-2" x="57" y="335" width="19" height="38"></Region>
+		<Region name="char-battle-right-idle" x="0" y="373" width="19" height="38"></Region>
+		<Region name="char-battle-right-walk-1" x="19" y="373" width="19" height="38"></Region>
+		<Region name="char-battle-right-walk-2" x="57" y="373" width="19" height="38"></Region>
+		<Region name="char-battle-back-idle" x="0" y="411" width="19" height="38"></Region>
+		<Region name="char-battle-back-walk-1" x="19" y="411" width="19" height="38"></Region>
+		<Region name="char-battle-back-walk-2" x="57" y="411" width="19" height="38"></Region>
 	</Regions>
 	<Animations>
 		

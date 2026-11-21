@@ -17,9 +17,36 @@ public interface IBattleStats {
     int MaxHealth { get; set; }
     int Attack { get; set; }
     Color HealthBarColour { get; protected set; }
+    float MaxInvincibility { get; } // beats
+    float Invincibility { get; protected set; } // beats
     void OnBattleStart(BattleState state) { }
     void OnBattleEnd(BattleState state) { }
+    void OnPhaseStart(BattleState state, BattlePhase phase) { }
     EnemyAction? ChooseAction(BattleState state) => null;
+
+    bool Damage(int amount)
+    {
+        if (Invincibility > 0 || Health <= 0) return false;
+
+        Health = Math.Max(0, Health - amount);
+        if (Health <= 0)
+        {
+            OnDeath();
+        }
+
+        if (MaxInvincibility > 0) Invincibility = MaxInvincibility;
+        return true;
+    }
+
+    void UpdateBattle(GameTime time)
+    {
+        if (Invincibility <= 0) return;
+
+        float beatLength = Audio.BPMSong.Current is { } song ? (float)song.BeatLength.TotalSeconds : 0.5f;
+        Invincibility = Math.Max(0f, Invincibility - (float)time.ElapsedGameTime.TotalSeconds / beatLength);
+    }
+
+    void OnDeath() { }
 
     void DrawHealthBar(SpriteBatch batch, Color colour, Color bgColour, float offset, float x, float y, float height, float width, float padding = 0f)
     {

@@ -101,7 +101,7 @@ public sealed class BattleUI : IDraw, IUpdating
                     for (int i = 0; i < living.Length; i++)
                     {
                         int damage = share + (i < remainder ? 1 : 0);
-                        living[i].Health = Math.Max(0, living[i].Health - damage);
+                        living[i].Damage(damage);
                     }
                 }
 

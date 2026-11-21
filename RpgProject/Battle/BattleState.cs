@@ -69,6 +69,8 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
     public void Advance() => Phase = Phase.Next();
     private void OnPhaseStart(BattlePhase phase)
     {
+        foreach (var combatant in All) combatant.OnPhaseStart(this, phase);
+
         switch (phase)
         {
             case BattlePhase.Menu:
@@ -236,6 +238,8 @@ public sealed class BattleState(IEnumerable<IBattleStats> playerTeam, IEnumerabl
             End();
             return;
         }
+
+        foreach (var combatant in All) combatant.UpdateBattle(deltaTime);
 
         if (!TextBox.InDialogue) phaseElapsed += deltaTime.ElapsedGameTime;
         if (Phase.Duration() is { } limit && phaseElapsed >= limit) Advance();

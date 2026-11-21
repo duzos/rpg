@@ -32,6 +32,8 @@ public class Character : Entity, IBattleStats
 
     public Direction Facing => lastFacingDirection;
     public Color HealthBarColour { get; set; } = Color.Lime;
+    public float MaxInvincibility { get; } = 2f;
+    public float Invincibility { get; set; }
     private static bool BattleLocksMovement => BattleState.Current is { Phase: not BattlePhase.EnemyAttack };
     public bool CanMove => !(Core.Console.Open || RoomManager.Instance.Transitioning || TextBox.DialogueAtFrameStart || MoveTarget is not null || BattleLocksMovement);
     public bool CanInteract => CanMove && !BattleState.InBattle;
@@ -144,8 +146,94 @@ public class Character : Entity, IBattleStats
         Sprite = UpdateSprite();
     }
 
+    private enum Pose { None, Draw, Idle, Attack, Sheathe }
+
+    private readonly record struct PoseInfo(string Region, int Frames, double Delay, Vector2 Anchor, bool Loop);
+
+    private static readonly Dictionary<Pose, PoseInfo> Poses = new()
+    {
+        [Pose.Draw] = new("char-battle-attack", 8, 0.07, new Vector2(12, 42), false),
+        [Pose.Attack] = new("char-battle-attack", 8, 0.07, new Vector2(12, 42), false),
+        [Pose.Idle] = new("char-battle-idle", 6, 0.15, new Vector2(12, 37), true),
+        [Pose.Sheathe] = new("char-battle-end", 9, 0.06, new Vector2(10, 36), false),
+    };
+
+    private static readonly Vector2 BattleBodySize = new(19, 38);
+    private static readonly Vector2 BattleFeet = new(8.5f, 36);
+
+    private Pose _pose = Pose.None;
+    private AnimatedSprite? _poseSprite;
+    private double _poseTime;
+
+    private bool UseBattleBody => BattleState.Current is not null || _pose != Pose.None;
+    public override float Width => UseBattleBody ? BattleBodySize.X : base.Width;
+    public override float Height => UseBattleBody ? BattleBodySize.Y : base.Height;
+
+    public void OnPhaseStart(BattleState state, BattlePhase phase)
+    {
+        switch (phase)
+        {
+            case BattlePhase.Intro: PlayPose(Pose.Draw); break;
+            case BattlePhase.Menu: if (_pose == Pose.None) PlayPose(Pose.Draw); break;
+            case BattlePhase.PlayerAction: PlayPose(Pose.Attack); break;
+            case BattlePhase.EnemyAttack: PlayPose(Pose.Sheathe); break;
+            case BattlePhase.Outro: if (_pose != Pose.None) PlayPose(Pose.Sheathe); break;
+            default: StopPose(); break;
+        }
+    }
+
+    public void OnBattleEnd(BattleState state)
+    {
+        if (_pose != Pose.Sheathe) StopPose();
+    }
+
+    private void PlayPose(Pose pose)
+    {
+        var info = Poses[pose];
+        var frames = Enumerable.Range(0, info.Frames).Select(i => MainGame.Atlas.GetRegion($"{info.Region}-{i}")).ToList();
+        _poseSprite = new AnimatedSprite(new Animation(frames, TimeSpan.FromSeconds(info.Delay)))
+        {
+            PlayType = info.Loop ? AnimatedSprite.Type.LOOP : AnimatedSprite.Type.HOLD,
+            Origin = info.Anchor + BattleBodySize / 2f - BattleFeet,
+        };
+        _poseSprite.Shadow.Enabled = false;
+        _pose = pose;
+        _poseTime = 0;
+        Sprite = _poseSprite;
+    }
+
+    private void StopPose()
+    {
+        _pose = Pose.None;
+        _poseSprite = null;
+    }
+
+    private void UpdatePose(GameTime time)
+    {
+        if (_pose == Pose.None) return;
+        if (BattleState.Current is null && _pose != Pose.Sheathe)
+        {
+            StopPose();
+            return;
+        }
+
+        if (_pose == Pose.Sheathe && inputs.Take(4).Any(v => v))
+        {
+            StopPose();
+            return;
+        }
+
+        var info = Poses[_pose];
+        _poseTime += time.ElapsedGameTime.TotalSeconds;
+        if (info.Loop || _poseTime < info.Frames * info.Delay) return;
+
+        if (_pose == Pose.Sheathe) StopPose();
+        else PlayPose(Pose.Idle);
+    }
+
     public override void Update(GameTime deltaTime)
     {
+        UpdatePose(deltaTime);
         Sprite = UpdateSprite();
         UpdateInputs();
         Move(deltaTime);
@@ -155,6 +243,8 @@ public class Character : Entity, IBattleStats
 
     public override void Draw(SpriteBatch spriteBatch)
     {
+        bool flicker = Invincibility > 0 && (int)(Invincibility * 8) % 2 == 0;
+        if (Sprite is not null) Sprite.Colour = flicker ? Color.White * 0.35f : Color.White;
         base.Draw(spriteBatch);
         if (IUIElement.Debug)
         {
@@ -165,29 +255,33 @@ public class Character : Entity, IBattleStats
 
     private Sprite UpdateSprite()
     {
+        if (_pose != Pose.None && _poseSprite is not null) return _poseSprite;
+
         string keyword = GetDirectionKeyword(lastFacingDirection);
         bool idle = !inputs.Take(4).Any(v => v);
-        string lookup = $"char-{keyword}-{(idle ? "idle" : "walk")}"; 
+        var battle = BattleState.Current is not null ? "-battle" : "";
+        string lookup = $"char{battle}-{keyword}-{(idle ? "idle" : "walk")}"; 
         Sprite val = sprites.GetValueOrDefault(lookup, null);
         if (val is not null) return val;
 
-        if (keyword.Equals("left") || keyword.Equals("right"))
+        if (BattleState.Current is null && (keyword.Equals("left") || keyword.Equals("right")))
         {
             keyword = "side";
         }
 
-        if (idle) val = new Sprite(MainGame.Atlas.GetRegion($"char-{keyword}-idle"));
+
+        if (idle) val = new Sprite(MainGame.Atlas.GetRegion($"char{battle}-{keyword}-idle"));
         else
             val = new AnimatedSprite(new Animation(
             [
-                MainGame.Atlas.GetRegion($"char-{keyword}-walk-1"),
-                MainGame.Atlas.GetRegion($"char-{keyword}-idle"),
-                MainGame.Atlas.GetRegion($"char-{keyword}-walk-2"),
-                MainGame.Atlas.GetRegion($"char-{keyword}-idle"),
+                MainGame.Atlas.GetRegion($"char{battle}-{keyword}-walk-1"),
+                MainGame.Atlas.GetRegion($"char{battle}-{keyword}-idle"),
+                MainGame.Atlas.GetRegion($"char{battle}-{keyword}-walk-2"),
+                MainGame.Atlas.GetRegion($"char{battle}-{keyword}-idle"),
 
             ], TimeSpan.FromSeconds(0.25D)));
 
-        val.Effects = lastFacingDirection == Direction.East ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+        val.Effects = lastFacingDirection == Direction.East && battle == "" ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
         val.CenterOrigin();
         val.Shadow.Enabled = false;
 

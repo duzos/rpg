@@ -43,9 +43,8 @@ public abstract class Bullet : Entity
         base.Update(time);
 
         // check if we collided w the player
-        if (CanHit && AABB.Intersects(Character.PlayerFeet) && MainGame.Player is IBattleStats stats)
+        if (CanHit && AABB.Intersects(Character.PlayerFeet) && MainGame.Player is IBattleStats stats && stats.Damage(Attack))
         {
-            stats.Health -= Attack;
             Remove();
             return;
         }

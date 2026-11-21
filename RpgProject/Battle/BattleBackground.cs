@@ -30,9 +30,9 @@ public sealed class BattleBackground : IUpdating
     public float FadeIn { get; set; } = 0.1f;
     public float GlowStrength { get; set; } = 0.25f;
 
-    public float RingBrightness { get; set; } = 0.45f;
+    public float RingBrightness { get; set; } = 0.25f;
     public int RingThickness { get; set; } = 1;
-    public float EnemyRingBrightness { get; set; } = 0.5f;
+    public float EnemyRingBrightness { get; set; } = 0.15f;
 
     public float AccentWhiten { get; set; } = 0.4f;
     public float AccentSpeedMultiplier { get; set; } = 1.4f;
